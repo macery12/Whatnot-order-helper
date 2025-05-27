@@ -12,8 +12,8 @@ COPY database.py .
 COPY csv_decoder.py .
 
 # Copy folders explicitly
-COPY templates/ templates/
-COPY static/ static/
+COPY templates/* templates/
+COPY static/* static/
 
 
 # Optional: Debug output (remove later if not needed)
