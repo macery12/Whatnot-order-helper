@@ -1,0 +1,194 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Whatnot Dashboard</title>
+  <link rel="stylesheet" href="/static/dashboard_styles.css">
+</head>
+<body>
+
+<div class="top-actions">
+  <a href="/scan" class="scan-button">📷 Scan</a>
+</div>
+
+<h1>📦 Whatnot Orders Dashboard</h1>
+
+<div class="summary-bar">
+  Total Orders: <span>{{ total_orders }}</span>
+  Packed: <span>{{ total_packed }}</span>
+  Unpacked: <span>{{ total_unpacked }}</span>
+</div>
+
+<div class="upload-box">
+  <h3>📥 Import CSV</h3>
+  <form method="POST" enctype="multipart/form-data">
+    <label for="csv_file">CSV File:</label>
+    <input type="file" name="csv_file" id="csv_file" accept=".csv" required>
+
+    <label for="show_date">Show Date:</label>
+    <input type="date" name="show_date" id="show_date">
+
+    <label for="show_label">Show Label:</label>
+    <input type="text" name="show_label" id="show_label" placeholder="Ex: Morning Show">
+
+    <button type="submit">Upload</button>
+  </form>
+</div>
+
+<form method="GET" class="search-form">
+  <input type="text" name="search" placeholder="Search by username or product" value="{{ query }}">
+  <button type="submit">🔍 Search</button>
+</form>
+
+<form method="GET" class="show-filter">
+  <label for="show">Filter by Show:</label>
+  <select name="show" onchange="this.form.submit()">
+    <option value="">-- All Shows --</option>
+    {% for date, label in shows %}
+      {% set value = date ~ '|' ~ label %}
+      <option value="{{ value }}" {% if selected_show == value %}selected{% endif %}>
+        {{ date }} - {{ label }}
+      </option>
+    {% endfor %}
+  </select>
+</form>
+
+<div class="dashboard-container">
+  {% for user, orders in data.items() %}
+    <div class="user-section {{ status_by_user[user] }}">
+      <div class="user-header">
+        <span>{{ user }}</span>
+        <span style="font-size: 0.8rem;">
+          🟢 Packed: {{ orders | selectattr('packed') | list | length }}
+          | 🟠 Unpacked: {{ orders | rejectattr('packed') | list | length }}
+        </span>
+      </div>
+
+      <div class="user-orders">
+        {% if status_by_user[user] == 'missing-tracking' %}
+        <form class="bundle-tracking-form" action="{{ url_for('add_tracking_group') }}" method="POST">
+          <input type="hidden" name="username" value="{{ user }}">
+          <input type="text" name="tracking_number" placeholder="Add tracking # for all {{ user }} orders">
+          <button type="submit">➕</button>
+        </form>
+        {% endif %}
+
+        {% set first_order = orders[0] %}
+            <div class="upload-image-block">
+            {% if first_order.image_id %}
+                <a href="{{ url_for('uploaded_file', filename=first_order.image_id) }}" target="_blank">
+                <img src="{{ url_for('uploaded_file', filename=first_order.image_id) }}" class="thumbnail" alt="Order Image">
+                </a>
+            {% endif %}
+        <form class="auto-submit-upload" action="{{ url_for('upload_image', order_number=first_order.order_number) }}" method="POST" enctype="multipart/form-data">
+        <label class="file-upload-btn">
+            📷 <span class="upload-label">Upload Order Images</span>
+            <input type="file" name="image" accept="image/*" capture="environment" required>
+        </label>
+        </form>
+        </div>
+
+        {% for pkg in orders %}
+          {% set card_class = 'order-card' %}
+          {% if pkg.tracking_number and pkg.packed %}
+            {% set card_class = card_class ~ ' packed' %}
+          {% elif pkg.tracking_number and not pkg.packed %}
+            {% set card_class = card_class ~ ' needs-packing' %}
+          {% elif not pkg.tracking_number %}
+            {% set card_class = card_class ~ ' missing-tracking' %}
+          {% endif %}
+
+          <div class="{{ card_class }}">
+            <div class="order-info">
+              <div><strong>Order #:</strong> {{ pkg.order_number }}</div>
+              <div><strong>Product:</strong> {{ pkg.product_name }}</div>
+              <div><strong>ID #:</strong> {{ pkg.identifier }}</div>
+              <div>
+                <strong>Tracking:</strong>
+                {% if pkg.tracking_number %}
+                  {{ pkg.tracking_number[-6:] }}
+                  <span class="badge tracking">Has Tracking</span>
+                {% else %}
+                  <span class="badge no-tracking">Missing</span>
+                {% endif %}
+              </div>
+              <div>
+                <strong>Packed:</strong>
+                <button class="packed-btn" data-order="{{ pkg.order_number }}" data-packed="{{ pkg.packed|string }}">
+                  {{ '✅' if pkg.packed else '❌' }}
+                </button>
+                <span class="badge {{ 'packed' if pkg.packed else 'unpacked' }}">
+                  {{ 'Packed' if pkg.packed else 'Needs Packing' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  // Toggle dropdowns for user sections
+  document.querySelectorAll('.user-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const parent = header.closest('.user-section');
+      parent.classList.toggle('active');
+    });
+  });
+
+  // Handle packed/unpacked AJAX toggle
+  document.body.addEventListener('click', async function (e) {
+    const button = e.target.closest('.packed-btn');
+    if (!button) return;
+
+    e.preventDefault();
+    const order = button.dataset.order;
+    const currentPacked = button.dataset.packed === 'True';
+
+    if (currentPacked) {
+      const confirmUnpack = confirm("⚠️ This order is already packed.\\nAre you sure you want to mark it as unpacked?");
+      if (!confirmUnpack) return;
+    }
+
+    const newPacked = !currentPacked;
+
+    const response = await fetch('/api/toggle_packed', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order_number: order, packed: newPacked })
+    });
+
+    if (response.ok) {
+      button.textContent = newPacked ? '✅' : '❌';
+      button.dataset.packed = String(newPacked);
+      const badge = button.nextElementSibling;
+      if (badge && badge.classList.contains('badge')) {
+        badge.className = 'badge ' + (newPacked ? 'packed' : 'unpacked');
+        badge.textContent = newPacked ? 'Packed' : 'Needs Packing';
+      }
+    } else {
+      alert("❌ Failed to update packed status.");
+    }
+  });
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll('.auto-submit-upload input[type="file"]').forEach(input => {
+    input.addEventListener('change', function () {
+      if (this.files.length > 0) {
+        const labelSpan = this.closest('label').querySelector('.upload-label');
+        if (labelSpan) labelSpan.textContent = "Uploading...";
+        this.closest('form').submit();
+      }
+    });
+  });
+});
+</script>
+
+</body>
+</html>

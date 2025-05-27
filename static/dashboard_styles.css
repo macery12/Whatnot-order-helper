@@ -1,0 +1,347 @@
+
+/* Base layout */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #111;
+  color: #eee;
+  padding-bottom: 60px;
+}
+
+h1 {
+  color: #ff3c3c;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.top-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 20px;
+}
+
+.scan-button {
+  background-color: #ff3c3c;
+  color: black;
+  padding: 8px 16px;
+  text-decoration: none;
+  font-weight: bold;
+  border-radius: 5px;
+}
+
+.upload-box {
+  background-color: #1a1a1a;
+  border-left: 4px solid #ff3c3c;
+  margin: 20px auto;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 800px;
+}
+
+.upload-box input,
+.search-form input,
+.show-filter select {
+  background-color: #222;
+  color: #eee;
+  border: 1px solid #444;
+  padding: 8px;
+  border-radius: 4px;
+  margin-top: 4px;
+  width: 100%;
+  font-size: 1rem;
+}
+
+.upload-box button,
+.search-form button {
+  background-color: #ff3c3c;
+  color: black;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  margin-top: 10px;
+  font-size: 1rem;
+}
+
+.search-form,
+.show-filter {
+  max-width: 800px;
+  margin: 0 auto 20px;
+  padding: 0 20px;
+}
+
+.show-filter label {
+  margin-right: 10px;
+}
+
+.dashboard-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 0 20px;
+  justify-content: center;
+}
+
+/* User sections with status coloring */
+.user-section {
+  flex: 1 1 460px;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  background-color: #181818;
+  border-radius: 8px;
+  border-left: 4px solid #ff3c3c;
+}
+
+.user-section.packed .user-header {
+  background-color: #163b16;
+  border-left: 6px solid #00c853;
+  color: #b9f6ca;
+}
+
+.user-section.missing-tracking .user-header {
+  background-color: #3b1616;
+  border-left: 6px solid #e53935;
+  color: #ffcdd2;
+}
+
+.user-section.needs-packing .user-header {
+  background-color: #3b2d16;
+  border-left: 6px solid #ff9800;
+  color: #ffe082;
+}
+
+.user-header {
+  background-color: #222;
+  padding: 14px 18px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #333;
+}
+
+.user-orders {
+  display: none;
+  padding: 16px;
+}
+
+.user-section.active .user-orders {
+  display: block;
+}
+
+/* Order card layout */
+.order-card {
+  background-color: #1e1e1e;
+  border-left: 6px solid #555;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+}
+
+.order-card.packed {
+  border-left-color: #00c853;
+  background-color: #1b2b1b;
+}
+
+.order-card.missing-tracking {
+  border-left-color: #e53935;
+  background-color: #2a1a1a;
+}
+
+.order-card.needs-packing {
+  border-left-color: #ff9800;
+  background-color: #2b2414;
+}
+
+.order-info {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.95rem;
+}
+
+.order-info div {
+  flex: 1 1 200px;
+}
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  border-radius: 4px;
+  font-weight: bold;
+  margin-top: 4px;
+}
+
+.badge.packed {
+  background-color: #00c853;
+  color: black;
+}
+
+.badge.tracking {
+  background-color: #2196f3;
+  color: white;
+}
+
+.badge.no-tracking {
+  background-color: #ff5722;
+  color: white;
+}
+
+.badge.unpacked {
+  background-color: #ff9800;
+  color: black;
+}
+
+/* Upload image block */
+.upload-image-block {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.upload-image-block input[type="file"] {
+  flex: 1;
+  color: #ccc;
+  background: #222;
+  border: 1px solid #444;
+  padding: 6px;
+  border-radius: 4px;
+}
+
+.upload-image-block button {
+  background-color: #ff3c3c;
+  color: black;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Packed toggle */
+.packed-btn {
+  background: none;
+  border: none;
+  font-size: 1.2em;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Summary Bar */
+.summary-bar {
+  background: #222;
+  border-bottom: 2px solid #ff3c3c;
+  color: #fff;
+  padding: 15px 30px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+.summary-bar span {
+  margin: 0 15px;
+  color: #ff3c3c;
+}
+.thumbnail {
+ max-width: 120px;
+  max-height: 120px;
+  height: auto;
+  border-radius: 4px;
+  object-fit: contain;
+  display: block;
+}
+.file-upload-btn {
+  display: inline-block;
+  background-color: #ff3c3c;
+  color: black;
+  padding: 10px 16px;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1rem;
+  border: none;
+  text-align: center;
+}
+
+.file-upload-btn input[type="file"] {
+  display: none;
+}
+
+/* Mobile tweaks */
+@media (max-width: 600px) {
+  body {
+    font-size: 1.1rem;
+  }
+
+  .upload-box input,
+  .upload-box button,
+  .search-form input,
+  .search-form button,
+  .show-filter select {
+    font-size: 1.1rem;
+    padding: 12px;
+  }
+
+  .order-info {
+    font-size: 1.1rem;
+  }
+
+  .badge {
+    font-size: 1rem;
+  }
+
+  .user-header {
+    font-size: 1.2rem;
+    padding: 16px;
+  }
+  .user-section {
+  max-width: 100%;
+}
+
+.user-header {
+  font-size: 1.4rem;
+  padding: 20px;
+}
+
+.order-card {
+  padding: 16px;
+  font-size: 1.2rem;
+}
+
+.order-info div {
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
+
+.badge {
+  font-size: 1.1rem;
+  padding: 6px 10px;
+}
+
+.upload-image-block input[type="file"],
+.upload-image-block button,
+.upload-box button,
+.search-form button {
+  font-size: 1.2rem;
+  padding: 14px;
+}
+
+.packed-btn {
+  font-size: 1.5em;
+}
+.thumbnail {
+ max-width: 120px;
+  max-height: 120px;
+  height: auto;
+  border-radius: 4px;
+  object-fit: contain;
+  display: block;
+}
+}

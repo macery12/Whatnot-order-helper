@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Package Details</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <style>
+    .details-container {
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+      background-color: #1e1e1e;
+      border-radius: 10px;
+    }
+    .details-container h1 {
+      text-align: center;
+      color: #ffcc00;
+    }
+    .details-container p {
+      font-size: 16px;
+      margin: 8px 0;
+    }
+    .upload-form {
+      margin-top: 20px;
+    }
+    .thumbnail {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border: 1px solid #555;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="details-container">
+    <h1>📄 Order Details</h1>
+
+    {% if package %}
+      <p><strong>Order #:</strong> {{ package.order_number }}</p>
+      <p><strong>User:</strong> {{ package.username }}</p>
+      <p><strong>Product:</strong> {{ package.product_name }}</p>
+      <p><strong>ID #:</strong> {{ package.identifier }}</p>
+      <p><strong>Tracking #:</strong> {{ package.tracking_number }}</p>
+      <p><strong>Show Date:</strong> {{ package.show_date }}</p>
+      <p><strong>Show Label:</strong> {{ package.show_label }}</p>
+      <p><strong>Packed:</strong> {{ '✅' if package.packed else '❌' }}</p>
+
+      {% if package.image_id %}
+        <p><strong>Image:</strong></p>
+        <a href="{{ url_for('uploaded_file', filename=package.image_id) }}" target="_blank">
+          <img src="{{ url_for('uploaded_file', filename=package.image_id) }}" class="thumbnail">
+        </a>
+      {% else %}
+        <p><strong>Image:</strong> None</p>
+      {% endif %}
+
+      <form class="upload-form" action="/upload_image/{{ package.order_number }}" method="POST" enctype="multipart/form-data">
+        <label for="image">Upload Image:</label>
+        <input type="file" name="image" accept="image/*" required>
+        <button type="submit">📷 Upload</button>
+      </form>
+
+    {% else %}
+      <p style="color: red;">❌ No order found for this tracking number.</p>
+    {% endif %}
+  </div>
+</body>
+</html>

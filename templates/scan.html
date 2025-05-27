@@ -1,0 +1,137 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Scan & Fulfill Orders</title>
+  <link rel="stylesheet" href="/static/scan_styles.css">
+</head>
+<body>
+<div class="scan-header">
+  <h1>📦 Scan Order Dashboard</h1>
+</div>
+
+<div class="scan-panel">
+  <form id="scan-form" method="GET" action="/scan">
+    <input type="text" id="scan-input" name="tracking" placeholder="Scan barcode..." autofocus>
+    <input type="hidden" name="show" value="{{ selected_show }}">
+    <button type="submit" class="scan-btn">🔍 Scan</button>
+  </form>
+
+  <form id="search-form" method="GET" action="/scan">
+    <input type="text" name="search_username" placeholder="Search username...">
+    <input type="hidden" name="show" value="{{ selected_show }}">
+    <button type="submit" class="scan-btn">🔎 Search</button>
+  </form>
+
+  <form method="GET" action="/scan">
+    <label for="show">Show:</label>
+    <select name="show" onchange="this.form.submit()">
+      <option value="">-- All Shows --</option>
+      {% for date, label in shows %}
+        {% set value = date ~ '|' ~ label %}
+        <option value="{{ value }}" {% if selected_show == value %}selected{% endif %}>
+          {{ date }} - {{ label }}
+        </option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<div class="scan-layout">
+  <div class="order-section">
+    <h2>📋 Current Orders</h2>
+    <div class="grid-orders">
+      {% for pkg in selected_orders %}
+        <div class="order-card">
+          <div class="order-meta">
+            <strong>Order #:</strong> {{ pkg.order_number }}<br>
+            <strong>Product:</strong> {{ pkg.product_name }}<br>
+            <strong>ID:</strong> {{ pkg.identifier or '—' }}<br>
+            <strong>Tracking:</strong> {{ pkg.tracking_number[-6:] if pkg.tracking_number }}
+          </div>
+          <div class="order-status">
+            <button
+              class="toggle-packed-btn small-btn"
+              data-order="{{ pkg.order_number }}"
+              data-packed="{{ pkg.packed|lower }}">
+              {{ '✅ Packed' if pkg.packed else '❌ Unpacked' }}
+            </button>
+          </div>
+          <div class="thumbnails">
+            {% for img_id in pkg.image_ids.split(',') if img_id %}
+              <a href="{{ url_for('uploaded_file', filename=img_id) }}" target="_blank">
+                <img class="thumbnail" src="{{ url_for('uploaded_file', filename=img_id) }}">
+              </a>
+            {% endfor %}
+          </div>
+          <form method="POST" action="/upload_image/{{ pkg.order_number }}" enctype="multipart/form-data" class="file-upload-btn">
+            <label>
+              📷 Upload Image
+              <input type="file" name="image" accept="image/*" onchange="this.form.submit()">
+            </label>
+          </form>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="recent-section">
+    <h2>🕘 Recent Scans</h2>
+    {% for pkg in recent_scans %}
+      <div class="recent-entry">
+        <div>
+          {{ pkg.username }}<br>
+          {{ pkg.tracking_number[-6:] if pkg.tracking_number }}
+        </div>
+        <form method="GET" action="/scan">
+          <input type="hidden" name="tracking" value="{{ pkg.tracking_number }}">
+          <input type="hidden" name="show" value="{{ selected_show }}">
+          <button type="submit" class="small-btn">Select</button>
+        </form>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.auto-submit-upload input[type="file"]').forEach(input => {
+    input.addEventListener('change', function () {
+      if (this.files.length > 0) {
+        const labelSpan = this.closest('label').querySelector('.upload-label');
+        if (labelSpan) labelSpan.textContent = "Uploading...";
+        this.closest('form').submit();
+      }
+    });
+  });
+</script>
+<script>
+document.querySelectorAll('.toggle-packed-btn').forEach(button => {
+  button.addEventListener('click', async () => {
+    const order = button.dataset.order;
+    const isPacked = button.dataset.packed === 'true';
+    const newPacked = !isPacked;
+  
+    button.disabled = true;
+    button.textContent = newPacked ? "✅ Updating..." : "❌ Updating...";
+
+    const res = await fetch('/api/toggle_packed', {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ order_number: order, packed: newPacked })
+    });
+
+    if (res.ok) {
+      button.dataset.packed = newPacked.toString();
+      button.textContent = newPacked ? "✅ Packed" : "❌ Unpacked";
+      button.disabled = false;
+    } else {
+      alert("❌ Failed to update packed status.");
+      button.disabled = false;
+    }
+  });
+});
+</script>
+
+</body>
+</html>

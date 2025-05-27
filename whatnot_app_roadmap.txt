@@ -1,0 +1,98 @@
+
+🧭 Whatnot Flask App – Roadmap & To-Do List
+===========================================
+
+🔐 SECURITY & SESSION MANAGEMENT
+--------------------------------
+1. Set strong app.secret_key (✅ Done)
+2. Move secret key to environment variable using python-dotenv
+3. Validate and sanitize all form inputs to prevent injection
+4. Add CSRF protection for forms (e.g., Flask-WTF)
+5. Limit file upload types to image MIME types and max size
+6. Add login/authentication system (Flask-Login)
+7. Protect admin routes behind login
+8. Log failed API attempts and invalid scans
+
+🖼️ SCAN PAGE IMPROVEMENTS
+--------------------------
+1. Store `recent scans` in a proper model/table (not just Flask session)
+2. Add 'Mark all packed' for orders under one tracking number
+3. Add comments/notes per order
+4. Show full show info (date + label) above the order block
+5. Add button to jump from scanned order to dashboard filtered to that user
+6. Better error handling if scan not found
+7. Persistent scanned history across reloads (optional)
+
+📦 CSV IMPORT & SHOW MANAGEMENT
+-------------------------------
+1. Add a "Show Manager" admin tool to list, rename, delete shows
+2. Automatically validate duplicate tracking/order numbers on import
+3. Log all import attempts (timestamp + result)
+4. Add version tracking to each imported CSV for rollback
+5. Add ability to re-import or replace a CSV for the same show
+
+📊 DASHBOARD IMPROVEMENTS
+-------------------------
+1. Color-coded visual indicators for:
+   - Fully packed ✅
+   - Missing tracking ❌
+   - Needs packing 🟠
+2. Add sort options (e.g., newest, unshipped first)
+3. Add pagination or lazy loading for large shows
+4. Add username filtering as a dropdown (in addition to search)
+5. Fix duplicate image display per order when multiple images exist
+6. Add export to CSV per show
+
+🛠️ ADMIN PAGE ENHANCEMENTS
+---------------------------
+1. Add order delete/archive option
+2. Add "create bulk order" form for quick testing
+3. Add "clone order" tool for rapid manual testing
+4. Allow editing tracking number per order (inline or modal)
+
+📁 FILE & IMAGE HANDLING
+------------------------
+1. Auto-compress images on upload (✅ Done)
+2. Store images in subfolders by date or order number (optional)
+3. Clean up unused image files (garbage collection)
+4. Add thumbnail + lightbox viewer on dashboard and scan page
+
+📈 PERFORMANCE OPTIMIZATION
+---------------------------
+1. Add SQLAlchemy indexes:
+   - `tracking_number`
+   - `username`
+2. Profile slow queries (e.g., dashboard load)
+3. Migrate to PostgreSQL if DB grows beyond light use
+
+✅ CLEAN CODE & STRUCTURE
+-------------------------
+1. Split `app.py` into:
+   - `views/dashboard.py`
+   - `views/scan.py`
+   - `views/admin.py`
+   - `models/package.py`
+   - `utils/image_tools.py`
+2. Use Jinja template inheritance (base.html)
+3. Add unit tests with `pytest` for:
+   - CSV import
+   - Order updates
+   - Toggle packed
+   - Image upload
+
+🖼️ UI POLISH
+------------
+1. Convert scan + dashboard to Tailwind or Bootstrap layout
+2. Responsive mobile layout for every page (✅ partially done)
+3. Add dark/light mode toggle
+4. Improve button styling and accessibility labels
+5. Show order count per show in dropdown
+
+📦 DEPLOYMENT & BACKUPS
+-----------------------
+1. Enable SQLite auto-backup on server
+2. Add `/admin/export` for full DB to CSV
+3. Dockerize app for consistent deployment
+4. Serve behind nginx or reverse proxy with SSL
+5. Auto-update static asset cache with versioning hash
+

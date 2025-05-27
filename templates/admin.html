@@ -1,0 +1,58 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel - Orders</title>
+  <link rel="stylesheet" href="/static/admin_styles.css">
+</head>
+<body>
+  <h1>🛠️ Admin Order Management</h1>
+
+  <div class="admin-container">
+
+    <!-- Left Side: Create New Order -->
+    <div class="panel">
+      <h2>Create New Order</h2>
+      <form method="POST" action="/admin/create">
+        <input type="text" name="username" placeholder="Username" required>
+        <input type="text" name="order_number" placeholder="Order Number" required>
+        <input type="text" name="product_name" placeholder="Product Name" required>
+        <input type="text" name="timestamp" placeholder="Timestamp (e.g., 2024-05-25 12:00)">
+        <input type="text" name="tracking_number" placeholder="Tracking Number">
+        <input type="text" name="show_date" placeholder="Show Date (YYYY-MM-DD)">
+        <input type="text" name="show_label" placeholder="Show Label (e.g., Morning Show)">
+        <label><input type="checkbox" name="bundled"> Bundled</label>
+        <label><input type="checkbox" name="cancelled"> Cancelled</label>
+        <label><input type="checkbox" name="packed"> Packed</label>
+        <button type="submit">➕ Create Order</button>
+      </form>
+    </div>
+
+    <!-- Right Side: Edit Existing Order -->
+    <div class="panel">
+      <h2>Edit Order (Last 6 of Tracking)</h2>
+      <form method="GET" action="/admin">
+        <input type="text" name="tracking_suffix" placeholder="Last 6 digits..." required>
+        <button type="submit">🔍 Load</button>
+      </form>
+
+      {% if edit_order %}
+      <form method="POST" action="/admin/edit/{{ edit_order.order_number }}">
+        <input type="text" name="username" value="{{ edit_order.username }}" required>
+        <input type="text" name="product_name" value="{{ edit_order.product_name }}" required>
+        <input type="text" name="timestamp" value="{{ edit_order.timestamp }}">
+        <input type="text" name="tracking_number" value="{{ edit_order.tracking_number }}">
+        <input type="text" name="show_date" value="{{ edit_order.show_date }}">
+        <input type="text" name="show_label" value="{{ edit_order.show_label }}">
+        <label><input type="checkbox" name="bundled" {% if edit_order.bundled %}checked{% endif %}> Bundled</label>
+        <label><input type="checkbox" name="cancelled" {% if edit_order.cancelled %}checked{% endif %}> Cancelled</label>
+        <label><input type="checkbox" name="packed" {% if edit_order.packed %}checked{% endif %}> Packed</label>
+        <button type="submit">💾 Save Changes</button>
+      </form>
+      {% endif %}
+    </div>
+
+  </div>
+</body>
+</html>
