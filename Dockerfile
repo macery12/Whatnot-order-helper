@@ -1,23 +1,27 @@
-# Use a lightweight Python base image
 FROM python:3.11-slim
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy requirements first (for caching)
+# Copy and install requirements
 COPY requirements.txt .
-
-# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install Gunicorn for production WSGI server
-#RUN pip install gunicorn
+# Copy main files
+COPY app.py .
+COPY database.py .
+COPY csv_decoder.py .
+COPY scan_routes.py .
+COPY admin_routes.py .
 
-# Now copy the **entire project** into the container
-COPY . .
+# Copy folders explicitly
+COPY templates/ templates/
+COPY static/ static/
+COPY instance/ instance/
 
-# Expose the port Flask runs on
+# Optional: Debug output (remove later if not needed)
+RUN echo "STATIC CONTENT:" && ls -al /app/static && \
+    echo "TEMPLATE CONTENT:" && ls -al /app/templates
+
 EXPOSE 5000
 
-# Run using Gunicorn
 CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app"]
