@@ -10,13 +10,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app.py .
 COPY database.py .
 COPY csv_decoder.py .
-COPY scan_routes.py .
-COPY admin_routes.py .
 
 # Copy folders explicitly
 COPY templates/ templates/
 COPY static/ static/
-COPY instance/ instance/
+
 
 # Optional: Debug output (remove later if not needed)
 RUN echo "STATIC CONTENT:" && ls -al /app/static && \
