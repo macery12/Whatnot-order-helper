@@ -9,7 +9,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Install Gunicorn
-RUN pip install gunicorn
+#RUN pip install gunicorn
 
 # Copy the rest of your application
 COPY . .
