@@ -263,7 +263,14 @@ def api_toggle_scan_packed():
         return '', 204
     return 'Bad Request', 400
 
-
+@app.route('/label', methods=['GET', 'POST'])
+def label():
+    label_data = None
+    if request.method == 'POST':
+        id_number = request.form.get('id_number')
+        name = request.form.get('name')
+        label_data = {'id': id_number, 'name': name}
+    return render_template('label.html', label=label_data)
 
 if __name__ == '__main__':
     init_db()

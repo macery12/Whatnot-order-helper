@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Print Label</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1e1e1e;
+            color: #f0f0f0;
+            text-align: center;
+            padding: 40px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        form input {
+            margin: 10px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            width: 200px;
+        }
+
+        form button {
+            padding: 10px 20px;
+            background-color: #ff3333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .label-container {
+            margin-top: 30px;
+        }
+
+        .label {
+            width: 2in;
+            height: 1in;
+            background-color: white;
+            color: black;
+            border: 2px solid black;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 20pt;
+            font-weight: bold;
+            margin: auto;
+            padding: 5px;
+            box-sizing: border-box;
+        }
+
+        .id {
+            font-size: 18pt;
+            white-space: nowrap;
+        }
+
+        .name {
+            font-size: 16pt;
+            word-break: break-word;
+            text-align: center;
+            max-width: 100%;
+        }
+
+        .label-container button {
+            margin-top: 15px;
+            padding: 8px 16px;
+            background-color: #33cc66;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .label, .label * {
+                visibility: visible;
+            }
+            .label {
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h2>🖨️ Label Generator</h2>
+    <form method="POST">
+        <input type="text" name="id_number" placeholder="Enter ID #" required>
+        <input type="text" name="name" placeholder="Enter Name" required>
+        <br>
+        <button type="submit">Generate Label</button>
+    </form>
+
+    {% if label %}
+    <div class="label-container">
+        <div class="label">
+            <div class="id">#{{ label.id }}</div>
+            <div class="name">{{ label.name }}</div>
+        </div>
+        <button onclick="window.print()">🖨️ Print Label</button>
+    </div>
+    {% endif %}
+</body>
+</html>
