@@ -1,5 +1,5 @@
 
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory, jsonify, session, make_response
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, jsonify, session, make_response, flash
 from database import get_all_packages, init_db, update_packed, update_image_id, update_tracking_number, get_shows, Session, Package
 from csv_decoder import import_csv
 from collections import defaultdict
@@ -171,16 +171,12 @@ def scan():
             pkg.order_number in recent_ids for pkg in selected_orders
         )
 
-        if previously_scanned:
-            for pkg in selected_orders:
-                if not pkg.packed:
-                    pkg.packed = True
-                    initials = [
-                        ''.join(part[0] for part in name.strip().split())
-                        for name in session.get('active_packers', [])
-                    ]
-                    pkg.packers = ' + '.join(initials)
-            session_db.commit()
+        previously_scanned = any(
+                pkg.order_number in recent_ids for pkg in selected_orders
+            )
+
+        show_modal = previously_scanned and any(not pkg.packed for pkg in selected_orders)
+        session['modal_tracking'] = tracking_query if show_modal else ''
 
         session_db.close()
 
@@ -208,7 +204,8 @@ def scan():
                         selected_show=selected_show,
                         selected_orders=selected_orders,
                         recent_orders=recent_orders,
-                        packer_names=PACKER_NAMES)
+                        packer_names=PACKER_NAMES,
+                        show_modal=show_modal)
 
 
 @app.route('/details')
@@ -393,6 +390,30 @@ def label():
                            selected_label=selected_label,
                            hide_company=hide_company,
                            hide_date=hide_date)
+
+@app.route('/confirm_pack', methods=['POST'])
+def confirm_pack():
+    tracking_number = request.form.get('tracking_number', '').strip()
+    last6 = tracking_number[-6:]
+    session_db = Session()
+    updated = 0
+
+    for pkg in session_db.query(Package).all():
+        if pkg.tracking_number and pkg.tracking_number.endswith(last6):
+            if not pkg.packed:
+                pkg.packed = True
+                initials = [
+                    ''.join(part[0] for part in name.strip().split())
+                    for name in session.get('active_packers', [])
+                ]
+                pkg.packers = ' + '.join(initials)
+                updated += 1
+
+    session_db.commit()
+    session_db.close()
+    flash(f"{updated} order(s) marked as packed.")
+    return redirect(url_for('scan'))
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=1689, host="0.0.0.0")

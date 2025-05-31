@@ -7,7 +7,23 @@
   <link rel="stylesheet" href="/static/scan_styles.css">
 </head>
 <body>
-
+{% if show_modal %}
+<div class="modal-backdrop">
+  <div class="modal-box">
+    <h2>🧾 Mark Order(s) as Packed?</h2>
+    <p>This tracking number was already scanned. Do you want to mark the following order(s) as packed?</p>
+    <ul>
+      {% for pkg in selected_orders %}
+        <li>{{ pkg.order_number }} — {{ pkg.product_name }}</li>
+      {% endfor %}
+    </ul>
+    <form method="POST" action="/confirm_pack">
+      <input type="hidden" name="tracking_number" value="{{ session.get('modal_tracking') }}">
+      <button type="submit" class="btn confirm">✅ Yes, Mark as Packed</button>
+      <a href="/scan" class="btn cancel">❌ Cancel</a>
+    </form>
+  </div>
+</div>
 <div class="scan-header">
   <h1>📦 Scan Order Dashboard</h1>
 </div>
