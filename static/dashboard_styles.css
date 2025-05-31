@@ -362,6 +362,22 @@ select[multiple] {
 .dropdown-list input[type="checkbox"] {
   margin-right: 8px;
 }
+.label-button {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 6px 12px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.label-button:hover {
+  background-color: #217dbb;
+}
 /* Mobile tweaks */
 @media (max-width: 600px) {
   body {

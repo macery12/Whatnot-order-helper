@@ -131,6 +131,12 @@
 
           <div class="{{ card_class }}">
             <div class="order-info">
+              {% if pkg.label_url %}
+              <div class="label-preview">
+                <a href="{{ pkg.label_url }}" target="_blank" class="label-button">🎟️ Preview Label</a>
+              </div>
+            {% endif %}
+
               <div><strong>Order #:</strong> {{ pkg.order_number }}</div>
               <div><strong>Product:</strong> {{ pkg.product_name }}</div>
               <div><strong>ID #:</strong> {{ pkg.identifier }}</div>

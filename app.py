@@ -31,7 +31,6 @@ def set_active_packers():
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    init_db()
     
     if request.method == 'POST' and 'csv_file' in request.files:
         file = request.files['csv_file']

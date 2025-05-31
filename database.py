@@ -3,6 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
 
+
 # PostgreSQL database URL from environment variable (Docker-ready fallback)
 db_url = os.getenv(
     "DATABASE_URL" 
@@ -29,6 +30,7 @@ class Package(Base):
     image_ids = Column(String, default="")
     identifier = Column(String(20), nullable=True)
     packers = Column(Text, default="")
+    label_url = Column(String, nullable=True)
 
 def init_db():
     Base.metadata.create_all(engine)
