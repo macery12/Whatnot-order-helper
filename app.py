@@ -157,13 +157,36 @@ def scan():
     # Track recent orders
     recent_ids = session.get('recent_orders', [])
 
+    # 📦 TRACKING SCAN
     if tracking_query and len(tracking_query) >= 6:
         last6 = tracking_query[-6:]
+        session_db = Session()
         for pkg in all_packages:
             if pkg.tracking_number and pkg.tracking_number.endswith(last6):
                 if not selected_date or (pkg.show_date == selected_date and pkg.show_label == selected_label):
                     selected_orders.append(pkg)
 
+        # Check if it's a repeat scan (any order in recent_ids)
+        previously_scanned = any(
+            pkg.order_number in recent_ids for pkg in selected_orders
+        )
+
+        if previously_scanned:
+            for pkg in selected_orders:
+                if not pkg.packed:
+                    pkg.packed = True
+                    initials = [
+                        ''.join(part[0] for part in name.strip().split())
+                        for name in session.get('active_packers', [])
+                    ]
+                    pkg.packers = ' + '.join(initials)
+            session_db.commit()
+
+        session_db.close()
+
+        matched_order_numbers = [pkg.order_number for pkg in selected_orders]
+
+    # 🔍 USERNAME SEARCH
     elif search_username:
         for pkg in all_packages:
             if pkg.username.lower() == search_username:
@@ -171,17 +194,14 @@ def scan():
                     selected_orders.append(pkg)
                     matched_order_numbers.append(pkg.order_number)
 
-    # Update session recent orders
+    # 🕘 UPDATE RECENT ORDERS IN SESSION
     for order_num in matched_order_numbers:
         if order_num not in recent_ids:
             recent_ids.insert(0, order_num)
     session['recent_orders'] = recent_ids[:3]
 
-    # Get recent packages by order number
-    recent_orders = []
-    for pkg in all_packages:
-        if pkg.order_number in session.get('recent_orders', []):
-            recent_orders.append(pkg)
+    # 🔄 GET RECENT ORDER OBJECTS
+    recent_orders = [pkg for pkg in all_packages if pkg.order_number in session['recent_orders']]
 
     return render_template("scan.html",
                         shows=get_shows(),
@@ -189,6 +209,7 @@ def scan():
                         selected_orders=selected_orders,
                         recent_orders=recent_orders,
                         packer_names=PACKER_NAMES)
+
 
 @app.route('/details')
 def details():
