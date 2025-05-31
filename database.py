@@ -57,7 +57,8 @@ def insert_package(data):
             show_date=data.get('show_date', '').strip(),
             show_label=data.get('show_label', '').strip(),
             image_ids=data.get('image_ids', '').strip(),
-            identifier=data.get('identifier', '').strip()
+            identifier=data.get('identifier', '').strip(),
+            label_url=data.get('label_url', '').strip()  
         )
 
         session.add(pkg)
