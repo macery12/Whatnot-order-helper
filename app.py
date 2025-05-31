@@ -31,7 +31,7 @@ def set_active_packers():
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    
+    init_db()
     if request.method == 'POST' and 'csv_file' in request.files:
         file = request.files['csv_file']
         show_date = request.form.get('show_date', '')
@@ -374,5 +374,4 @@ def label():
                            hide_date=hide_date)
 
 if __name__ == '__main__':
-    init_db()
     app.run(debug=True, port=1689, host="0.0.0.0")
