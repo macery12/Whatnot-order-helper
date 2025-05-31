@@ -153,6 +153,7 @@ def scan():
     all_packages = get_all_packages()
     selected_orders = []
     matched_order_numbers = []
+    show_modal = False  
 
     # Track recent orders
     recent_ids = session.get('recent_orders', [])
@@ -166,20 +167,16 @@ def scan():
                 if not selected_date or (pkg.show_date == selected_date and pkg.show_label == selected_label):
                     selected_orders.append(pkg)
 
-        # Check if it's a repeat scan (any order in recent_ids)
-        previously_scanned = any(
-            pkg.order_number in recent_ids for pkg in selected_orders
-        )
-
-        previously_scanned = any(
-                pkg.order_number in recent_ids for pkg in selected_orders
-            )
+        previously_scanned = any(pkg.order_number in recent_ids for pkg in selected_orders)
 
         show_modal = previously_scanned and any(not pkg.packed for pkg in selected_orders)
-        session['modal_tracking'] = tracking_query if show_modal else ''
+
+        if show_modal:
+            session['modal_tracking'] = tracking_query
+        else:
+            session.pop('modal_tracking', None)
 
         session_db.close()
-
         matched_order_numbers = [pkg.order_number for pkg in selected_orders]
 
     # 🔍 USERNAME SEARCH
@@ -200,12 +197,12 @@ def scan():
     recent_orders = [pkg for pkg in all_packages if pkg.order_number in session['recent_orders']]
 
     return render_template("scan.html",
-                        shows=get_shows(),
-                        selected_show=selected_show,
-                        selected_orders=selected_orders,
-                        recent_orders=recent_orders,
-                        packer_names=PACKER_NAMES,
-                        show_modal=show_modal)
+                           shows=get_shows(),
+                           selected_show=selected_show,
+                           selected_orders=selected_orders,
+                           recent_orders=recent_orders,
+                           packer_names=PACKER_NAMES,
+                           show_modal=show_modal)
 
 
 @app.route('/details')
