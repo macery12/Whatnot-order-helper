@@ -245,14 +245,14 @@ h1 {
   z-index: 1000;
 }
 .modal-box {
-  background-color: #ffffff;
+  background-color: #5f5f5f;
   padding: 30px;
   border-radius: 12px;
   width: 400px;
   max-width: 90%;
   text-align: center;
   box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-   color: #000
+  
 }
 .modal-box h2 {
   margin-top: 0;
