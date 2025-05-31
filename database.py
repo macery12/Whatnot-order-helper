@@ -3,11 +3,11 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
 
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-DB_PATH = os.path.join(BASE_DIR, 'instance', 'whatnot.db')
-os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+# PostgreSQL database URL from environment variable (Docker-ready fallback)
+db_url = os.getenv(
+    "DATABASE_URL" 
+)
 
-db_url = f'sqlite:///{DB_PATH}'
 engine = create_engine(db_url, echo=False)
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
@@ -29,6 +29,7 @@ class Package(Base):
     image_ids = Column(String, default="")
     identifier = Column(String(20), nullable=True)
     packers = Column(Text, default="")
+
 def init_db():
     Base.metadata.create_all(engine)
 
@@ -53,7 +54,7 @@ def insert_package(data):
             tracking_number=data.get('tracking_number', '').strip(),
             show_date=data.get('show_date', '').strip(),
             show_label=data.get('show_label', '').strip(),
-            image_ids=data.get('image_ids', '').strip(),  # ✅ Fix this line
+            image_ids=data.get('image_ids', '').strip(),
             identifier=data.get('identifier', '').strip()
         )
 
@@ -93,7 +94,6 @@ def update_packed(order_number, packed=True):
         session.commit()
     session.close()
 
-
 def update_image_id(order_number, new_image_id):
     session = Session()
     pkg = session.query(Package).filter_by(order_number=order_number).first()
@@ -105,7 +105,6 @@ def update_image_id(order_number, new_image_id):
             session.commit()
     session.close()
 
-
 def update_tracking_number(order_number, tracking_number):
     session = Session()
     pkg = session.query(Package).filter_by(order_number=order_number).first()
@@ -113,4 +112,3 @@ def update_tracking_number(order_number, tracking_number):
         pkg.tracking_number = tracking_number
         session.commit()
     session.close()
-
