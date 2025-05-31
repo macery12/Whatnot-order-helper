@@ -73,9 +73,27 @@ services:
     ports:
       - 1689:5000
     volumes:
-      - /whatnot/instance:/app/instance # Database persistence
+      - /whatnot/names.py:/app/names.py #employee names listing
     restart: always
+    depends_on: []
+    environment:
+      - DATABASE_URL=postgresql://TYCO:TYCOCONECTIONS@postgress:5432/whatnotdb
+  postgress:
+    image: postgres:15
+    container_name: whatnot-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: TYCO
+      POSTGRES_PASSWORD: TYCOCONECTIONS
+      POSTGRES_DB: whatnotdb
+    volumes:
+      - whatnot_pgdata:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+volumes:
+  whatnot_pgdata: null
 networks: {}
+
 ```
 
 Then run:
