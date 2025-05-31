@@ -241,6 +241,13 @@ h1 {
   display: flex; align-items: center; justify-content: center;
   z-index: 9999;
 }
+.modal-box {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+  text-align: center;
+}
 .modal-box .btn {
   margin: 10px;
   padding: 8px 16px;
