@@ -270,6 +270,7 @@ def api_toggle_scan_packed():
         return '', 204
     return 'Bad Request', 400
 
+@app.route('/label', methods=['GET', 'POST'])
 def label():
     label_data = None
 
