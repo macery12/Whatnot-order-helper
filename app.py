@@ -167,16 +167,16 @@ def scan():
                 if not selected_date or (pkg.show_date == selected_date and pkg.show_label == selected_label):
                     selected_orders.append(pkg)
 
-        previously_scanned = any(pkg.order_number in recent_ids for pkg in selected_orders)
+# Get previous scanned tracking
+        last_tracking = session.get('last_tracking')
+        show_modal = (
+                    last_tracking == tracking_query and
+                    any(not pkg.packed for pkg in selected_orders)
+                )
 
-        show_modal = previously_scanned and any(not pkg.packed for pkg in selected_orders)
-
-        if show_modal:
-            session['modal_tracking'] = tracking_query
-        else:
-            session.pop('modal_tracking', None)
-
-        session_db.close()
+                # Update session state
+        session['last_tracking'] = tracking_query
+        session['modal_tracking'] = tracking_query if show_modal else ''
         matched_order_numbers = [pkg.order_number for pkg in selected_orders]
 
     # 🔍 USERNAME SEARCH
