@@ -33,3 +33,4 @@ coverage.xml
 # Flask build/output
 .webassets-cache
 templates/dashboard_backup.html
+names.py

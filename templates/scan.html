@@ -7,8 +7,44 @@
   <link rel="stylesheet" href="/static/scan_styles.css">
 </head>
 <body>
+
 <div class="scan-header">
   <h1>📦 Scan Order Dashboard</h1>
+</div>
+
+<div class="packer-box">
+  <h3>👤 Select Active Packers</h3>
+  <form method="POST" action="{{ url_for('set_active_packers') }}" class="custom-multi-dropdown">
+    <div class="dropdown-box">
+      <div class="dropdown-selected" onclick="toggleDropdown()" id="selectedText">
+        {% if session.get('active_packers') %}
+          {% set initial_list = [] %}
+          {% for name in session.get('active_packers') %}
+            {% set parts = name.split(' ') %}
+            {% if parts|length >= 2 %}
+              {% set initials = parts[0][0] ~ parts[1][0] %}
+            {% else %}
+              {% set initials = parts[0][0] %}
+            {% endif %}
+            {% set initial_list = initial_list + [initials] %}
+          {% endfor %}
+          {{ initial_list | join(' + ') }}
+        {% else %}
+          Click to select…
+        {% endif %}
+      </div>
+      <div class="dropdown-list" id="dropdownList">
+        {% for person in packer_names %}
+          <label>
+            <input type="checkbox" name="active_packers" value="{{ person }}"
+              {% if person in session.get('active_packers', []) %}checked{% endif %}>
+            {{ person }}
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+    <button type="submit">Save</button>
+  </form>
 </div>
 
 <div class="scan-panel">
@@ -78,7 +114,7 @@
 
   <div class="recent-section">
     <h2>🕘 Recent Scans</h2>
-    {% for pkg in recent_scans %}
+    {% for pkg in recent_orders %}
       <div class="recent-entry">
         <div>
           {{ pkg.username }}<br>
@@ -95,40 +131,55 @@
 </div>
 
 <script>
-  document.querySelectorAll('.auto-submit-upload input[type="file"]').forEach(input => {
-    input.addEventListener('change', function () {
-      if (this.files.length > 0) {
-        const labelSpan = this.closest('label').querySelector('.upload-label');
-        if (labelSpan) labelSpan.textContent = "Uploading...";
-        this.closest('form').submit();
-      }
+function toggleDropdown() {
+  const list = document.getElementById('dropdownList');
+  list.style.display = list.style.display === 'block' ? 'none' : 'block';
+}
+
+document.addEventListener('click', function (e) {
+  const box = document.querySelector('.dropdown-box');
+  if (!box.contains(e.target)) {
+    document.getElementById('dropdownList').style.display = 'none';
+  }
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+  const checkboxes = document.querySelectorAll('.dropdown-list input[type="checkbox"]');
+  const selectedText = document.getElementById('selectedText');
+  checkboxes.forEach(cb => {
+    cb.addEventListener('change', () => {
+      const selected = Array.from(checkboxes)
+        .filter(i => i.checked)
+        .map(i => i.value.split(" ").map(p => p[0]).join(""))
+        .join(" + ");
+      selectedText.textContent = selected || "Click to select…";
     });
   });
-</script>
-<script>
-document.querySelectorAll('.toggle-packed-btn').forEach(button => {
-  button.addEventListener('click', async () => {
-    const order = button.dataset.order;
-    const isPacked = button.dataset.packed === 'true';
-    const newPacked = !isPacked;
-  
-    button.disabled = true;
-    button.textContent = newPacked ? "✅ Updating..." : "❌ Updating...";
 
-    const res = await fetch('/api/toggle_packed', {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ order_number: order, packed: newPacked })
+  document.querySelectorAll('.toggle-packed-btn').forEach(button => {
+    button.addEventListener('click', async () => {
+      const order = button.dataset.order;
+      const isPacked = button.dataset.packed === 'true';
+      const newPacked = !isPacked;
+
+      button.disabled = true;
+      button.textContent = newPacked ? "✅ Updating..." : "❌ Updating...";
+
+      const res = await fetch('/api/toggle_packed', {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order_number: order, packed: newPacked })
+      });
+
+      if (res.ok) {
+        button.dataset.packed = newPacked.toString();
+        button.textContent = newPacked ? "✅ Packed" : "❌ Unpacked";
+        button.disabled = false;
+      } else {
+        alert("❌ Failed to update packed status.");
+        button.disabled = false;
+      }
     });
-
-    if (res.ok) {
-      button.dataset.packed = newPacked.toString();
-      button.textContent = newPacked ? "✅ Packed" : "❌ Unpacked";
-      button.disabled = false;
-    } else {
-      alert("❌ Failed to update packed status.");
-      button.disabled = false;
-    }
   });
 });
 </script>

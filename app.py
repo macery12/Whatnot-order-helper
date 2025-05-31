@@ -8,7 +8,7 @@ from werkzeug.utils import secure_filename
 from uuid import uuid4
 from datetime import datetime
 from PIL import Image
-
+from names import PACKER_NAMES
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'images')
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -21,10 +21,18 @@ LABEL_SIZES = {
 }
 
 
+@app.route('/set_active_packers', methods=['POST'])
+def set_active_packers():
+    selected = request.form.getlist('active_packers')
+    session['active_packers'] = selected
+
+    # Redirect based on where the form was submitted from
+    return redirect(request.referrer or url_for('index'))
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     init_db()
-
+    
     if request.method == 'POST' and 'csv_file' in request.files:
         file = request.files['csv_file']
         show_date = request.form.get('show_date', '')
@@ -73,6 +81,10 @@ def index():
             else:
                 status = 'needs-packing'
         status_by_user[username] = status
+    user_packers = {}
+    for pkg in all_packages:
+        if pkg.username not in user_packers and pkg.packers:
+            user_packers[pkg.username] = pkg.packers.split(',')
 
     return render_template(
         'dashboard.html',
@@ -83,7 +95,9 @@ def index():
         selected_show=selected_show,
         total_orders=total_orders,
         total_packed=total_packed,
-        total_unpacked=total_unpacked
+        total_unpacked=total_unpacked,
+        user_packers=user_packers,
+        packer_names=PACKER_NAMES
     )
 
 @app.route('/add_tracking_group', methods=['POST'])
@@ -171,10 +185,11 @@ def scan():
             recent_orders.append(pkg)
 
     return render_template("scan.html",
-                           shows=get_shows(),
-                           selected_show=selected_show,
-                           selected_orders=selected_orders,
-                           recent_orders=recent_orders)
+                        shows=get_shows(),
+                        selected_show=selected_show,
+                        selected_orders=selected_orders,
+                        recent_orders=recent_orders,
+                        packer_names=PACKER_NAMES)
 
 @app.route('/details')
 def details():
@@ -188,9 +203,20 @@ def details():
                 break
     return render_template('details.html', package=package)
 
-@app.route('/scan/mark/<order_number>', methods=['POST'])
+app.route('/scan/mark/<order_number>', methods=['POST'])
 def scan_mark(order_number):
-    update_packed(order_number, packed=True)
+    session_db = Session()
+    pkg = session_db.query(Package).filter_by(order_number=order_number).first()
+    if pkg:
+        pkg.packed = True
+        if session.get('active_packers'):
+            initials = [
+                ''.join(part[0] for part in name.strip().split())
+                for name in session['active_packers']
+            ]
+            pkg.packers = ' + '.join(initials)
+        session_db.commit()
+    session_db.close()
     return redirect(url_for('scan'))
 
 @app.route('/static/images/<filename>')
@@ -202,8 +228,24 @@ def api_toggle_packed():
     data = request.get_json()
     order_number = data.get('order_number')
     packed = data.get('packed')
-    update_packed(order_number, packed)
+
+    session_db = Session()
+    pkg = session_db.query(Package).filter_by(order_number=order_number).first()
+    if pkg:
+        pkg.packed = packed
+        if packed:
+            initials = [
+                ''.join(part[0] for part in name.strip().split())
+                for name in session.get('active_packers', [])
+            ]
+            initials_str = ' + '.join(initials)
+            pkg.packers = initials_str
+        else:
+            pkg.packers = ""
+        session_db.commit()
+    session_db.close()
     return '', 204
+
 
 @app.route('/admin', methods=['GET'])
 def admin_panel():
@@ -269,6 +311,23 @@ def api_toggle_scan_packed():
         update_packed(order_number, new_status)
         return '', 204
     return 'Bad Request', 400
+
+@app.route('/set_packers', methods=['POST'])
+def set_packers():
+    username = request.form.get('username')
+    packers = request.form.getlist('packers')
+    session = Session()
+    updated = False
+
+    for pkg in session.query(Package).filter_by(username=username).all():
+        pkg.packers = ','.join(packers)
+        updated = True
+
+    if updated:
+        session.commit()
+    session.close()
+
+    return redirect(url_for('index'))
 
 @app.route('/label', methods=['GET', 'POST'])
 def label():

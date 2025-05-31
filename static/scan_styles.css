@@ -161,6 +161,79 @@ h1 {
   display: flex;
   justify-content: space-between;
 }
+.packer-box {
+  background: #1b1b1b;
+  padding: 15px;
+  border: 1px solid #444;
+  border-radius: 10px;
+  margin: 20px;
+  width: 320px;
+  color: white;
+  font-family: sans-serif;
+}
+
+.custom-multi-dropdown {
+  margin-top: 10px;
+}
+
+.dropdown-box {
+  position: relative;
+  user-select: none;
+}
+
+.dropdown-selected {
+  background: #222;
+  padding: 8px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #fff;
+}
+
+.dropdown-list {
+  display: none;
+  position: absolute;
+  background: #2a2a2a;
+  border: 1px solid #555;
+  border-radius: 4px;
+  margin-top: 5px;
+  max-height: 150px;
+  overflow-y: auto;
+  width: 100%;
+  z-index: 10;
+}
+
+.dropdown-list label {
+  display: block;
+  padding: 5px 10px;
+  cursor: pointer;
+  color: white;
+}
+
+.dropdown-list label:hover {
+  background-color: #333;
+}
+
+.dropdown-list input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+.custom-multi-dropdown button {
+  margin-top: 10px;
+  padding: 6px 12px;
+  background-color: #d32f2f;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.custom-multi-dropdown button:hover {
+  background-color: #b71c1c;
+}
 
 /* Responsive */
 @media (max-width: 768px) {

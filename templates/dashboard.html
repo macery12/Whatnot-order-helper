@@ -14,6 +14,36 @@
 
 <h1>📦 Whatnot Orders Dashboard</h1>
 
+<div class="packer-box">
+  <h3>👤 Select Active Packers</h3>
+  <form method="POST" action="{{ url_for('set_active_packers') }}" class="custom-multi-dropdown">
+    <div class="dropdown-box">
+      <div class="dropdown-selected" onclick="toggleDropdown()" id="selectedText">
+        {% if session.get('active_packers') %}
+          {% set initials = [] %}
+          {% for name in session.get('active_packers') %}
+            {% set parts = name.split(' ') %}
+            {% set initials = initials + [parts[0][0] ~ (parts[1][0] if parts|length > 1 else '')] %}
+          {% endfor %}
+          {{ initials | join(' + ') }}
+        {% else %}
+          Click to select…
+        {% endif %}
+      </div>
+      <div class="dropdown-list" id="dropdownList">
+        {% for person in packer_names %}
+          <label>
+            <input type="checkbox" name="active_packers" value="{{ person }}"
+              {% if person in session.get('active_packers', []) %}checked{% endif %}>
+            {{ person }}
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+    <button type="submit">Save</button>
+  </form>
+</div>
+
 <div class="summary-bar">
   Total Orders: <span>{{ total_orders }}</span>
   Packed: <span>{{ total_packed }}</span>
@@ -75,18 +105,18 @@
         {% endif %}
 
         {% set first_order = orders[0] %}
-            <div class="upload-image-block">
-            {% if first_order.image_id %}
-                <a href="{{ url_for('uploaded_file', filename=first_order.image_id) }}" target="_blank">
-                <img src="{{ url_for('uploaded_file', filename=first_order.image_id) }}" class="thumbnail" alt="Order Image">
-                </a>
-            {% endif %}
-        <form class="auto-submit-upload" action="{{ url_for('upload_image', order_number=first_order.order_number) }}" method="POST" enctype="multipart/form-data">
-        <label class="file-upload-btn">
-            📷 <span class="upload-label">Upload Order Images</span>
-            <input type="file" name="image" accept="image/*" capture="environment" required>
-        </label>
-        </form>
+        <div class="upload-image-block">
+          {% if first_order.image_id %}
+            <a href="{{ url_for('uploaded_file', filename=first_order.image_id) }}" target="_blank">
+              <img src="{{ url_for('uploaded_file', filename=first_order.image_id) }}" class="thumbnail" alt="Order Image">
+            </a>
+          {% endif %}
+          <form class="auto-submit-upload" action="{{ url_for('upload_image', order_number=first_order.order_number) }}" method="POST" enctype="multipart/form-data">
+            <label class="file-upload-btn">
+              📷 <span class="upload-label">Upload Order Images</span>
+              <input type="file" name="image" accept="image/*" capture="environment" required>
+            </label>
+          </form>
         </div>
 
         {% for pkg in orders %}
@@ -104,8 +134,10 @@
               <div><strong>Order #:</strong> {{ pkg.order_number }}</div>
               <div><strong>Product:</strong> {{ pkg.product_name }}</div>
               <div><strong>ID #:</strong> {{ pkg.identifier }}</div>
-              <div>
-                <strong>Tracking:</strong>
+              {% if pkg.packers %}
+                <div><strong>Packed by:</strong> {{ pkg.packers }}</div>
+              {% endif %}
+              <div><strong>Tracking:</strong>
                 {% if pkg.tracking_number %}
                   {{ pkg.tracking_number[-6:] }}
                   <span class="badge tracking">Has Tracking</span>
@@ -131,8 +163,33 @@
 </div>
 
 <script>
+function toggleDropdown() {
+  const list = document.getElementById('dropdownList');
+  list.style.display = list.style.display === 'block' ? 'none' : 'block';
+}
+
+document.addEventListener('click', function (e) {
+  const box = document.querySelector('.dropdown-box');
+  if (!box.contains(e.target)) {
+    document.getElementById('dropdownList').style.display = 'none';
+  }
+});
+
+// Optional: Live initials display (on check)
 document.addEventListener("DOMContentLoaded", function () {
-  // Toggle dropdowns for user sections
+  const checkboxes = document.querySelectorAll('.dropdown-list input[type="checkbox"]');
+  const selectedText = document.getElementById('selectedText');
+  checkboxes.forEach(cb => {
+    cb.addEventListener('change', () => {
+      const selected = Array.from(checkboxes)
+        .filter(i => i.checked)
+        .map(i => i.value.split(" ").map(p => p[0]).join(""))
+        .join(" + ");
+      selectedText.textContent = selected || "Click to select…";
+    });
+  });
+});
+document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll('.user-header').forEach(header => {
     header.addEventListener('click', () => {
       const parent = header.closest('.user-section');
@@ -140,7 +197,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // Handle packed/unpacked AJAX toggle
   document.body.addEventListener('click', async function (e) {
     const button = e.target.closest('.packed-btn');
     if (!button) return;
@@ -150,7 +206,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const currentPacked = button.dataset.packed === 'True';
 
     if (currentPacked) {
-      const confirmUnpack = confirm("⚠️ This order is already packed.\\nAre you sure you want to mark it as unpacked?");
+      const confirmUnpack = confirm("⚠️ This order is already packed.\nAre you sure you want to mark it as unpacked?");
       if (!confirmUnpack) return;
     }
 
@@ -176,6 +232,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 </script>
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll('.auto-submit-upload input[type="file"]').forEach(input => {

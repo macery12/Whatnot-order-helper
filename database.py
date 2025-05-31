@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Boolean
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
@@ -28,7 +28,7 @@ class Package(Base):
     show_label = Column(String(100), nullable=True)
     image_ids = Column(String, default="")
     identifier = Column(String(20), nullable=True)
-
+    packers = Column(Text, default="")
 def init_db():
     Base.metadata.create_all(engine)
 
