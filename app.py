@@ -1,5 +1,5 @@
 
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory, jsonify, session
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, jsonify, session, make_response
 from database import get_all_packages, init_db, update_packed, update_image_id, update_tracking_number, get_shows, Session, Package
 from csv_decoder import import_csv
 from collections import defaultdict
@@ -13,6 +13,13 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'images')
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 app.secret_key = 'mT@&5$!xq2Z8^frW3Eo1TpGnUvL#X93y'
+
+LABEL_SIZES = {
+    'Small (1.5 x 0.75)': ('1.5', '0.75'),
+    'Standard (2 x 1)': ('2', '1'),
+    'Large (3 x 1.5)': ('3', '1.5')
+}
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -263,14 +270,49 @@ def api_toggle_scan_packed():
         return '', 204
     return 'Bad Request', 400
 
-@app.route('/label', methods=['GET', 'POST'])
 def label():
     label_data = None
+
+    selected_label = request.cookies.get('label_size', 'Standard (2 x 1)')
+    hide_company = request.cookies.get('hide_company', 'false') == 'true'
+    hide_date = request.cookies.get('hide_date', 'false') == 'true'
+    width, height = LABEL_SIZES.get(selected_label, ('2', '1'))
+
     if request.method == 'POST':
         id_number = request.form.get('id_number')
         name = request.form.get('name')
-        label_data = {'id': id_number, 'name': name}
-    return render_template('label.html', label=label_data)
+        selected_label = request.form.get('label_size', selected_label)
+        hide_company = 'hide_company' in request.form
+        hide_date = 'hide_date' in request.form
+        width, height = LABEL_SIZES.get(selected_label, ('2', '1'))
+        today = datetime.today().strftime('%m/%d/%Y')
+
+        label_data = {
+            'id': id_number,
+            'name': name,
+            'date': today,
+            'hide_company': hide_company,
+            'hide_date': hide_date,
+            'width': width,
+            'height': height
+        }
+
+        response = make_response(render_template('label.html', label=label_data,
+                                                 label_sizes=LABEL_SIZES,
+                                                 selected_label=selected_label,
+                                                 hide_company=hide_company,
+                                                 hide_date=hide_date))
+        response.set_cookie('label_size', selected_label)
+        response.set_cookie('hide_company', str(hide_company).lower())
+        response.set_cookie('hide_date', str(hide_date).lower())
+        return response
+
+    return render_template('label.html',
+                           label=None,
+                           label_sizes=LABEL_SIZES,
+                           selected_label=selected_label,
+                           hide_company=hide_company,
+                           hide_date=hide_date)
 
 if __name__ == '__main__':
     init_db()
