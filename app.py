@@ -29,6 +29,8 @@ def set_active_packers():
     # Redirect based on where the form was submitted from
     return redirect(request.referrer or url_for('index'))
 
+from collections import defaultdict
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     init_db()
@@ -42,7 +44,7 @@ def index():
             file.save(filepath)
             import_csv(filepath, show_date=show_date, show_label=show_label)
             return redirect(url_for('index'))
-    
+
     query = request.args.get('search', '').strip().lower()
     show_value = request.args.get('show', '')
     selected_show = show_value
@@ -56,19 +58,23 @@ def index():
     total_packed = len([p for p in all_packages if p.packed])
     total_unpacked = total_orders - total_packed
 
-    # USPS-style grouping
-    grouped_packages = defaultdict(list)
+    # Group by tracking_number or fallback
+    raw_grouped = defaultdict(list)
     for pkg in all_packages:
         if query and query not in (pkg.username.lower() + pkg.product_name.lower()):
             continue
         if selected_date and selected_label:
             if pkg.show_date != selected_date or pkg.show_label != selected_label:
                 continue
+        key = pkg.tracking_number.strip() if pkg.tracking_number else f"missing_{pkg.username}_{pkg.order_number}"
+        raw_grouped[key].append(pkg)
 
-        key = pkg.tracking_number.strip() if pkg.tracking_number else f"missing_{pkg.username}"
-        grouped_packages[key].append(pkg)
+    # Sort groups by first package's username (case-insensitive)
+    grouped_packages = dict(sorted(
+        raw_grouped.items(),
+        key=lambda item: item[1][0].username.lower() if item[1] else ''
+    ))
 
-    # You can still build user-based grouping if needed
     user_packers = {}
     for pkg in all_packages:
         if pkg.username not in user_packers and pkg.packers:
@@ -86,6 +92,7 @@ def index():
         shows=get_shows(),
         selected_show=selected_show
     )
+
 
 @app.route('/add_tracking_group', methods=['POST'])
 def add_tracking_group():
