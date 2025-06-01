@@ -144,17 +144,7 @@
     </form>
   </div>
 </div>
-<div id="cameraModal" class="modal">
-  <div class="modal-content" style="max-width: 360px;">
-    <span class="close" onclick="closeCameraModal()">&times;</span>
-    <h3>📷 Take Photo</h3>
-    <video id="cameraStream" autoplay playsinline style="width: 100%; border-radius: 6px;"></video>
-    <button class="upload-photo-camera" onclick="capturePhoto()">📸 Capture</button>
-    <form id="cameraUploadForm" action="/upload/{{ pkgs[0].order_number }}" method="POST" enctype="multipart/form-data">
-      <input type="hidden" name="image" id="capturedImageInput">
-    </form>
-  </div>
-</div>
+
 <script>
 function toggleDropdown(headerEl) {
   const section = headerEl.closest('.package-section');
