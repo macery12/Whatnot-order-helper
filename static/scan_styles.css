@@ -318,6 +318,24 @@ h1 {
   cursor: pointer;
   width: 100%;
 }
+.upload-photo-camera {
+  background-color: #ff3c3c;
+  color: black;
+  padding: 8px 14px;
+  font-weight: bold;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 0.95rem;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.upload-photo-camera:hover {
+  background-color: #e53935;
+  transform: scale(1.03);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .scan-layout {
