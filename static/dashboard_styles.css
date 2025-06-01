@@ -289,7 +289,9 @@ h1 {
   margin: 0 15px;
   color: #ff3c3c;
 }
-
+.hidden-camera-input {
+  display: none;
+}
 @media (max-width: 768px) {
   .header-controls {
     display: flex;

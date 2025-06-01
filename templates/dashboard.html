@@ -94,9 +94,9 @@
       <div class="package-body">
         {% if pkgs[0].tracking_number %}
         <div class="package-actions">
-          <form action="/upload/{{ pkgs[0].order_number }}" method="post" enctype="multipart/form-data">
-            <input type="file" name="image" accept="image/*">
-            <button class="upload-photo">📸 Upload Photos for Package</button>
+          <form class="camera-upload-form" action="/upload/{{ pkgs[0].order_number }}" method="post" enctype="multipart/form-data">
+            <input type="file" name="image" accept="image/*" capture="environment" class="hidden-camera-input" onchange="this.form.submit()">
+            <button type="button" class="upload-photo" onclick="triggerCamera(this)">📸 Upload Photos for Package</button>
           </form>
         </div>
         {% endif %}
@@ -143,7 +143,11 @@ function toggleDropdown(headerEl) {
   const body = section.querySelector('.package-body');
   body.style.display = body.style.display === 'block' ? 'none' : 'block';
 }
-
+function triggerCamera(button) {
+  const form = button.closest('form');
+  const input = form.querySelector('.hidden-camera-input');
+  input.click();
+}
 function togglePacked(orderId, btn) {
   const isCurrentlyPacked = btn.classList.contains('packed');
   const newPackedState = !isCurrentlyPacked;
