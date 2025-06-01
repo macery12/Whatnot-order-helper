@@ -27,23 +27,12 @@ h1 {
 }
 
 .header-controls {
-  display: grid;
-  grid-template-columns: 300px auto 360px;
-  justify-content: center;
-  align-items: start;
-  gap: 40px;
-  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  gap: 60px;
+  padding: 0 60px;
   margin-top: 10px;
-}
-
-.upload-box {
-  background-color: #1a1a1a;
-  border-left: 4px solid #ff3c3c;
-  padding: 20px;
-  border-radius: 8px;
-  width: 100%;
-  box-sizing: border-box;
-  justify-self: center;
+  flex-wrap: wrap;
 }
 
 .packer-box {
@@ -51,12 +40,21 @@ h1 {
   border-left: 4px solid #ff3c3c;
   padding: 20px;
   border-radius: 8px;
-  width: 100%;
-  box-sizing: border-box;
+  width: 300px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-self: start;
+}
+
+.upload-box {
+  background-color: #1a1a1a;
+  border-left: 4px solid #ff3c3c;
+  padding: 20px;
+  border-radius: 8px;
+  width: 360px;
+  margin: 0 auto;
+  flex-grow: 0;
+  flex-shrink: 0;
 }
 
 .packer-box select {
