@@ -75,9 +75,7 @@
     {% set all_packed = pkgs | selectattr('packed', 'equalto', true) | list | length == pkgs | length %}
     {% set any_missing_tracking = pkgs | selectattr('tracking_number', 'equalto', '') | list | length > 0 %}
     {% set section_class = 'green' if all_packed else ('red' if any_missing_tracking else 'yellow') %}
-    {% if pkg.image_ids %}
 
-    {% endif %}
     <div class="package-section {{ section_class }}">
       <div class="package-header" onclick="toggleDropdown(this)">
         <span class="tracking-info">
@@ -92,13 +90,14 @@
           {{ pkgs | selectattr('packed', 'equalto', false) | list | length }} Unpacked
         </span>
       </div>
-      
+
       <div class="package-body">
         {% if pkgs[0].tracking_number %}
         <div class="package-actions">
-        <button class="upload-photo-camera" onclick="openCameraModal('{{ pkgs[0].order_number }}')">📸 Upload Photo</button>
-      </div>
-        {% endif %}
+          <button class="upload-photo-camera" onclick="openCameraModal('{{ pkgs[0].order_number }}')">📸 Upload Photo</button>
+        </div>
+
+        <!-- Camera Modal -->
         <div id="cameraModal-{{ pkgs[0].order_number }}" class="modal">
           <div class="modal-content" style="max-width: 360px;">
             <span class="close" onclick="closeCameraModal('{{ pkgs[0].order_number }}')">&times;</span>
@@ -110,36 +109,39 @@
             </form>
           </div>
         </div>
-          {% for pkg in pkgs %}
-            <div class="package-item">
-              <div><strong>ID#</strong>: {{ pkg.order_number }}</div>
-              <div><strong>Product</strong>: {{ pkg.product_name }}</div>
+        {% endif %}
 
-              {% if pkg.image_ids %}
-                <div class="thumbnail-gallery">
-                  {% for img in pkg.image_ids.split(',') %}
-                    <img src="{{ url_for('static', filename='images/' ~ img.strip()) }}" alt="Upload" class="thumbnail">
-                  {% endfor %}
-                </div>
-              {% endif %}
+        {% for pkg in pkgs %}
+        <div class="package-item">
+          <div><strong>ID#</strong>: {{ pkg.order_number }}</div>
+          <div><strong>Product</strong>: {{ pkg.product_name }}</div>
 
-              {% if pkg.label_url %}
-                <a href="{{ pkg.label_url }}" class="preview-label" target="_blank">🔍 Preview Label</a>
-              {% endif %}
+          {% if pkg.image_ids %}
+          <div class="thumbnail-gallery">
+            {% for img in pkg.image_ids.split(',') %}
+              <img src="{{ url_for('static', filename='images/' ~ img.strip()) }}" alt="Upload" class="thumbnail">
+            {% endfor %}
+          </div>
+          {% endif %}
 
-              <button class="toggle-packed {% if pkg.packed %}packed{% endif %}" onclick="togglePacked('{{ pkg.order_number }}', this)">
-                {% if pkg.packed %}✅ Packed{% else %}❌ Unpacked{% endif %}
-              </button>
+          {% if pkg.label_url %}
+            <a href="{{ pkg.label_url }}" class="preview-label" target="_blank">🔍 Preview Label</a>
+          {% endif %}
 
-              {% if not pkg.tracking_number %}
-                <button class="add-usps" onclick="openUspsModal('{{ pkg.order_number }}')">➕ Add USPS Number</button>
-              {% endif %}
-            </div>
-          {% endfor %}
+          <button class="toggle-packed {% if pkg.packed %}packed{% endif %}" onclick="togglePacked('{{ pkg.order_number }}', this)">
+            {% if pkg.packed %}✅ Packed{% else %}❌ Unpacked{% endif %}
+          </button>
+
+          {% if not pkg.tracking_number %}
+            <button class="add-usps" onclick="openUspsModal('{{ pkg.order_number }}')">➕ Add USPS Number</button>
+          {% endif %}
+        </div>
+        {% endfor %}
       </div>
     </div>
   {% endfor %}
 </div>
+
 
 
 <!-- Modal for Adding USPS -->
