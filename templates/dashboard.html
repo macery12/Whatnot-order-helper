@@ -85,7 +85,7 @@
 </form>
 
 <div class="dashboard-container">
-
+{% for tracking, pkgs in grouped_packages.items() %}
   <!-- Example: Package Group with Tracking -->
   <div class="package-section green">
     <div class="package-header" onclick="toggleDropdown(this)">
