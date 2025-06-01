@@ -97,7 +97,17 @@
         <button class="upload-photo-camera" onclick="openCameraModal('{{ pkgs[0].order_number }}')">📸 Upload Photo</button>
       </div>
         {% endif %}
-        
+        <div id="cameraModal-{{ pkgs[0].order_number }}" class="modal">
+          <div class="modal-content" style="max-width: 360px;">
+            <span class="close" onclick="closeCameraModal('{{ pkgs[0].order_number }}')">&times;</span>
+            <h3>📷 Take Photo</h3>
+            <video id="cameraStream-{{ pkgs[0].order_number }}" autoplay playsinline style="width: 100%; border-radius: 6px;"></video>
+            <button class="upload-photo-camera" onclick="capturePhoto('{{ pkgs[0].order_number }}')">📸 Capture</button>
+            <form id="cameraUploadForm-{{ pkgs[0].order_number }}" action="/upload/{{ pkgs[0].order_number }}" method="POST" enctype="multipart/form-data">
+              <input type="hidden" name="image" id="capturedImageInput-{{ pkgs[0].order_number }}">
+            </form>
+          </div>
+        </div>
         {% for pkg in pkgs %}
         <div class="package-item">
           <div><strong>ID#</strong>: {{ pkg.order_number }}</div>
@@ -211,36 +221,32 @@ function submitUsps(e) {
 
 
 
-let cameraStream = null;
-const video = document.getElementById('cameraStream');
-
 function openCameraModal(orderNumber) {
-  const modal = document.getElementById('cameraModal');
+  const modal = document.getElementById(`cameraModal-${orderNumber}`);
+  const video = document.getElementById(`cameraStream-${orderNumber}`);
   modal.style.display = 'block';
-
-  const form = document.getElementById('cameraUploadForm');
-  form.action = `/upload/${orderNumber}`;
 
   navigator.mediaDevices.getUserMedia({ video: true })
     .then(stream => {
-      cameraStream = stream;
       video.srcObject = stream;
+      video.dataset.streamId = orderNumber;
     })
     .catch(() => alert('Unable to access camera'));
 }
 
-function closeCameraModal() {
-  const modal = document.getElementById('cameraModal');
+function closeCameraModal(orderNumber) {
+  const modal = document.getElementById(`cameraModal-${orderNumber}`);
+  const video = document.getElementById(`cameraStream-${orderNumber}`);
   modal.style.display = 'none';
 
-  if (cameraStream) {
-    const tracks = cameraStream.getTracks();
-    tracks.forEach(track => track.stop());
-    cameraStream = null;
+  if (video.srcObject) {
+    video.srcObject.getTracks().forEach(track => track.stop());
+    video.srcObject = null;
   }
 }
 
-function capturePhoto() {
+function capturePhoto(orderNumber) {
+  const video = document.getElementById(`cameraStream-${orderNumber}`);
   const canvas = document.createElement('canvas');
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
@@ -249,12 +255,10 @@ function capturePhoto() {
   ctx.drawImage(video, 0, 0);
 
   const imageData = canvas.toDataURL('image/jpeg');
-  const input = document.getElementById('capturedImageInput');
-  input.value = imageData;
+  document.getElementById(`capturedImageInput-${orderNumber}`).value = imageData;
 
-  document.getElementById('cameraUploadForm').submit();
+  document.getElementById(`cameraUploadForm-${orderNumber}`).submit();
 }
-
 </script>
 </body>
 </html>
