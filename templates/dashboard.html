@@ -75,7 +75,13 @@
     {% set all_packed = pkgs | selectattr('packed', 'equalto', true) | list | length == pkgs | length %}
     {% set any_missing_tracking = pkgs | selectattr('tracking_number', 'equalto', '') | list | length > 0 %}
     {% set section_class = 'green' if all_packed else ('red' if any_missing_tracking else 'yellow') %}
-    
+    {% if pkg.image_ids %}
+  <div class="thumbnail-gallery">
+        {% for img in pkg.image_ids.split(',') %}
+          <img src="{{ url_for('static', filename='images/' ~ img.strip()) }}" alt="Upload" class="thumbnail">
+        {% endfor %}
+      </div>
+    {% endif %}
     <div class="package-section {{ section_class }}">
       <div class="package-header" onclick="toggleDropdown(this)">
         <span class="tracking-info">
