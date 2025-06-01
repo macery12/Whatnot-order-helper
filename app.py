@@ -9,6 +9,8 @@ from uuid import uuid4
 from datetime import datetime
 from PIL import Image
 from names import PACKER_NAMES
+import base64
+from io import BytesIO
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'images')
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -114,7 +116,7 @@ def toggle_packed(order_number):
     return redirect(url_for('index'))
 
 
-@app.route('/upload/<order_number>', methods=['POST'])
+@app.route('/upload_image/<order_number>', methods=['POST'])
 def upload(order_number):
     image_data = request.form.get('image')  # base64 image from hidden input
 
