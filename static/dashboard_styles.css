@@ -30,10 +30,10 @@ h1 {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 20px;
+  gap: 60px;
   padding: 0 20px;
   margin-top: 10px;
+  flex-wrap: wrap;
 }
 
 .upload-box {
@@ -43,6 +43,7 @@ h1 {
   border-radius: 8px;
   width: 360px;
   flex-shrink: 0;
+  align-self: flex-start;
 }
 
 .packer-box {
@@ -52,9 +53,10 @@ h1 {
   border-radius: 8px;
   width: 300px;
   flex-shrink: 0;
+  align-self: flex-start;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .packer-box select {
