@@ -94,11 +94,25 @@
       <div class="package-body">
         {% if pkgs[0].tracking_number %}
         <div class="package-actions">
-          <form class="camera-upload-form" action="/upload/{{ pkgs[0].order_number }}" method="post" enctype="multipart/form-data">
-            <input type="file" name="image" accept="image/*" capture="environment" class="hidden-camera-input" onchange="this.form.submit()">
-            <button type="button" class="upload-photo" onclick="triggerCamera(this)">📸 Upload Photos for Package</button>
-          </form>
-        </div>
+        <form action="/upload/{{ pkgs[0].order_number }}" method="post" enctype="multipart/form-data">
+          <input 
+            type="file" 
+            name="image" 
+            accept="image/*" 
+            capture="environment" 
+            style="display: none;" 
+            onchange="this.form.submit()" 
+            id="cameraInput-{{ pkgs[0].order_number }}"
+          >
+          <button 
+            type="button" 
+            class="upload-photo-camera" 
+            onclick="document.getElementById('cameraInput-{{ pkgs[0].order_number }}').click()"
+          >
+            📸 Upload Photo for Package
+          </button>
+        </form>
+      </div>
         {% endif %}
         
         {% for pkg in pkgs %}
