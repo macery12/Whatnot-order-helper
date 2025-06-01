@@ -84,8 +84,11 @@
 </form>
 
 <div class="dashboard-container">
-  {% for tracking, pkgs in grouped_packages.items() %}
-    <div class="package-section {% if pkgs[0].tracking_number %}green{% else %}red{% endif %}">
+    {% for tracking, pkgs in grouped_packages.items() %}
+     {% set all_packed = pkgs | selectattr('packed', 'equalto', true) | list | length == pkgs | length %}
+    {% set any_missing_tracking = pkgs | selectattr('tracking_number', 'equalto', '') | list | length > 0 %}
+    {% set section_class = 'green' if all_packed else ('red' if any_missing_tracking else 'yellow') %}
+    <div class="package-section {{ section_class }}">
       <div class="package-header" onclick="toggleDropdown(this)">
         <span class="tracking-info">
           {% if pkgs[0].tracking_number %}
@@ -146,20 +149,21 @@ function toggleDropdown(headerEl) {
 }
 
 function togglePacked(orderId, btn) {
-  fetch(`/toggle_packed/${orderId}`, {
-    method: 'POST'
+  const isCurrentlyPacked = btn.classList.contains('packed');
+  const newPackedState = !isCurrentlyPacked;
+
+  fetch(`/api/toggle_packed`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ order_number: orderId, packed: newPackedState })
   })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      btn.classList.toggle('packed');
-      btn.textContent = data.packed ? '✅ Packed' : '❌ Unpacked';
-    } else {
-      alert('Error updating packed status');
-    }
+  .then(() => {
+    btn.classList.toggle('packed', newPackedState);
+    btn.textContent = newPackedState ? '✅ Packed' : '❌ Unpacked';
   })
   .catch(() => alert('Failed to update packed status'));
 }
+
 
 function openUspsModal(orderId) {
   document.getElementById('uspsModal').style.display = 'block';

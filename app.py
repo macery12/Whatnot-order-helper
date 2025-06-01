@@ -42,7 +42,7 @@ def index():
             file.save(filepath)
             import_csv(filepath, show_date=show_date, show_label=show_label)
             return redirect(url_for('index'))
-
+    
     query = request.args.get('search', '').strip().lower()
     show_value = request.args.get('show', '')
     selected_show = show_value
