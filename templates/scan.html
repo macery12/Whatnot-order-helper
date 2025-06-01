@@ -118,12 +118,22 @@
               </a>
             {% endfor %}
           </div>
-          <form method="POST" action="/upload_image/{{ pkg.order_number }}" enctype="multipart/form-data" class="file-upload-btn">
-            <label>
-              📷 Upload Image
-              <input type="file" name="image" accept="image/*" onchange="this.form.submit()">
-            </label>
-          </form>
+          <!-- Trigger button -->
+          <button class="upload-photo-camera" onclick="openCameraModal('{{ pkg.order_number }}')">📸 Upload Photo</button>
+
+          <!-- Camera modal -->
+          <div id="cameraModal-{{ pkg.order_number }}" class="modal">
+            <div class="modal-content" style="max-width: 360px;">
+              <span class="close" onclick="closeCameraModal('{{ pkg.order_number }}')">&times;</span>
+              <h3>📷 Take Photo</h3>
+              <video id="cameraStream-{{ pkg.order_number }}" autoplay playsinline style="width: 100%; border-radius: 6px;"></video>
+              <button class="upload-photo-camera" onclick="capturePhoto('{{ pkg.order_number }}')">📸 Capture</button>
+              <form id="cameraUploadForm-{{ pkg.order_number }}" action="/upload_image/{{ pkg.order_number }}" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="image" id="capturedImageInput-{{ pkg.order_number }}">
+              </form>
+            </div>
+          </div>
+
         </div>
       {% endfor %}
     </div>
@@ -199,6 +209,48 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 });
+
+
+
+function openCameraModal(orderNumber) {
+  const modal = document.getElementById(`cameraModal-${orderNumber}`);
+  const video = document.getElementById(`cameraStream-${orderNumber}`);
+  modal.style.display = 'block';
+
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then(stream => {
+      video.srcObject = stream;
+      video.dataset.streamId = orderNumber;
+    })
+    .catch(() => alert('Unable to access camera'));
+}
+
+function closeCameraModal(orderNumber) {
+  const modal = document.getElementById(`cameraModal-${orderNumber}`);
+  const video = document.getElementById(`cameraStream-${orderNumber}`);
+  modal.style.display = 'none';
+
+  if (video.srcObject) {
+    video.srcObject.getTracks().forEach(track => track.stop());
+    video.srcObject = null;
+  }
+}
+
+function capturePhoto(orderNumber) {
+  const video = document.getElementById(`cameraStream-${orderNumber}`);
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth || 640;
+  canvas.height = video.videoHeight || 480;
+
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  const imageData = canvas.toDataURL('image/jpeg');
+  const hiddenInput = document.getElementById(`capturedImageInput-${orderNumber}`);
+  hiddenInput.value = imageData;
+
+  document.getElementById(`cameraUploadForm-${orderNumber}`).submit();
+}
 </script>
 
 </body>
