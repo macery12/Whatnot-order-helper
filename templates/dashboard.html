@@ -15,30 +15,15 @@
 
 <div class="packer-box">
   <h3>👤 Select Active Packers</h3>
-  <form method="POST" action="{{ url_for('set_active_packers') }}" class="custom-multi-dropdown">
-    <div class="dropdown-box">
-      <div class="dropdown-selected" onclick="toggleDropdown()" id="selectedText">
-        {% if session.get('active_packers') %}
-          {% set initials = [] %}
-          {% for name in session.get('active_packers') %}
-            {% set parts = name.split(' ') %}
-            {% set initials = initials + [parts[0][0] ~ (parts[1][0] if parts|length > 1 else '')] %}
-          {% endfor %}
-          {{ initials | join(' + ') }}
-        {% else %}
-          Click to select…
-        {% endif %}
-      </div>
-      <div class="dropdown-list" id="dropdownList">
-        {% for person in packer_names %}
-          <label>
-            <input type="checkbox" name="active_packers" value="{{ person }}"
-              {% if person in session.get('active_packers', []) %}checked{% endif %}>
-            {{ person }}
-          </label>
-        {% endfor %}
-      </div>
-    </div>
+  <form method="POST" action="{{ url_for('set_active_packers') }}">
+    <select name="active_packers" multiple>
+      {% for person in packer_names %}
+        <option value="{{ person }}"
+          {% if person in session.get('active_packers', []) %}selected{% endif %}>
+          {{ person }}
+        </option>
+      {% endfor %}
+    </select>
     <button type="submit">Save</button>
   </form>
 </div>
