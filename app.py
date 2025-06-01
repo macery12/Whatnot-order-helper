@@ -56,30 +56,19 @@ def index():
     total_packed = len([p for p in all_packages if p.packed])
     total_unpacked = total_orders - total_packed
 
-    filtered = []
-    grouped = defaultdict(list)
-    status_by_user = {}
-
+    # USPS-style grouping
+    grouped_packages = defaultdict(list)
     for pkg in all_packages:
         if query and query not in (pkg.username.lower() + pkg.product_name.lower()):
             continue
         if selected_date and selected_label:
             if pkg.show_date != selected_date or pkg.show_label != selected_label:
                 continue
-        grouped[pkg.username].append(pkg)
 
-    # Determine user status colors
-    for username, orders in grouped.items():
-        has_missing_tracking = any(not p.tracking_number for p in orders)
-        if has_missing_tracking:
-            status = 'missing-tracking'
-        else:
-            all_packed = all(p.packed for p in orders)
-            if all_packed:
-                status = 'packed'
-            else:
-                status = 'needs-packing'
-        status_by_user[username] = status
+        key = pkg.tracking_number.strip() if pkg.tracking_number else f"missing_{pkg.username}"
+        grouped_packages[key].append(pkg)
+
+    # You can still build user-based grouping if needed
     user_packers = {}
     for pkg in all_packages:
         if pkg.username not in user_packers and pkg.packers:
@@ -87,16 +76,15 @@ def index():
 
     return render_template(
         'dashboard.html',
-        data=grouped,
-        status_by_user=status_by_user,
-        query=query,
-        shows=get_shows(),
-        selected_show=selected_show,
+        grouped_packages=grouped_packages,
         total_orders=total_orders,
         total_packed=total_packed,
         total_unpacked=total_unpacked,
         user_packers=user_packers,
-        packer_names=PACKER_NAMES
+        packer_names=PACKER_NAMES,
+        query=query,
+        shows=get_shows(),
+        selected_show=selected_show
     )
 
 @app.route('/add_tracking_group', methods=['POST'])
