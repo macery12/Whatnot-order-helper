@@ -114,26 +114,30 @@ def toggle_packed(order_number):
     return redirect(url_for('index'))
 
 
-@app.route('/upload_image/<order_number>', methods=['POST'])
-def upload_image(order_number):
-    file = request.files['image']
-    if file:
-        date_str = datetime.now().strftime('%Y%m%d')
-        suffix = uuid4().hex[:6]
-        filename = f"IMG_{order_number}_{date_str}_{suffix}.jpg"
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(filename))
+@app.route('/upload/<order_number>', methods=['POST'])
+def upload(order_number):
+    image_data = request.form.get('image')  # base64 image from hidden input
 
+    if image_data and image_data.startswith('data:image'):
         try:
-            from PIL import Image
-            image = Image.open(file.stream)
-            image = image.convert("RGB")
+            header, encoded = image_data.split(',', 1)
+            image_bytes = base64.b64decode(encoded)
+            image = Image.open(BytesIO(image_bytes)).convert("RGB")
             image.thumbnail((1600, 1600))
-            image.save(filepath, format="JPEG", optimize=True, quality=75)
-            update_image_id(order_number, filename)
-        except Exception as e:
-            print("Image compression error:", e)
 
-    return redirect(request.referrer or url_for('scan'))
+            date_str = datetime.now().strftime('%Y%m%d')
+            suffix = uuid4().hex[:6]
+            filename = f"IMG_{order_number}_{date_str}_{suffix}.jpg"
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(filename))
+
+            image.save(filepath, format="JPEG", optimize=True, quality=75)
+
+            update_image_id(order_number, filename)  # ← Your existing DB call
+            return redirect(request.referrer or url_for('scan'))
+        except Exception as e:
+            print(f"Image decode/save failed: {e}")
+            return "Invalid image data", 400
+    return "No image received", 400
 
 @app.route('/scan', methods=['GET'])
 def scan():
