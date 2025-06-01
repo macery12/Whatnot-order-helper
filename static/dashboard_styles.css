@@ -27,13 +27,13 @@ h1 {
 }
 
 .header-controls {
-  display: flex;
+  display: grid;
+  grid-template-columns: 300px auto 360px;
   justify-content: center;
-  align-items: flex-start;
-  gap: 60px;
+  align-items: start;
+  gap: 40px;
   padding: 0 20px;
   margin-top: 10px;
-  flex-wrap: wrap;
 }
 
 .upload-box {
@@ -41,9 +41,9 @@ h1 {
   border-left: 4px solid #ff3c3c;
   padding: 20px;
   border-radius: 8px;
-  width: 360px;
-  flex-shrink: 0;
-  align-self: flex-start;
+  width: 100%;
+  box-sizing: border-box;
+  justify-self: center;
 }
 
 .packer-box {
@@ -51,12 +51,12 @@ h1 {
   border-left: 4px solid #ff3c3c;
   padding: 20px;
   border-radius: 8px;
-  width: 300px;
-  flex-shrink: 0;
-  align-self: flex-start;
+  width: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  justify-self: start;
 }
 
 .packer-box select {
@@ -294,6 +294,7 @@ h1 {
 
 @media (max-width: 768px) {
   .header-controls {
+    display: flex;
     flex-direction: column;
     align-items: center;
   }
