@@ -73,10 +73,17 @@ def index():
 
     # Sort groups by first package's username (case-insensitive)
         grouped_packages = defaultdict(list)
+
         for pkg in all_packages:
-            # Use tracking if available, else fallback to a unique "missing" group
-            key = pkg.tracking_number if pkg.tracking_number else f"missing-{pkg.username}-{pkg.order_number}"
+            if pkg.tracking_number:
+                key = pkg.tracking_number
+            else:
+                # Group by a unique key per user for all missing tracking numbers
+                key = f"missing-{pkg.username.lower()}"
             grouped_packages[key].append(pkg)
+
+        # Optional: Sort alphabetically by username
+        grouped_packages = dict(sorted(grouped_packages.items(), key=lambda kv: kv[1][0].username.lower()))
 
     user_packers = {}
     for pkg in all_packages:
