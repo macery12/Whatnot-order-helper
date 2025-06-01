@@ -70,10 +70,11 @@
 </form>
 
 <div class="dashboard-container">
-    {% for tracking, pkgs in grouped_packages.items() %}
-     {% set all_packed = pkgs | selectattr('packed', 'equalto', true) | list | length == pkgs | length %}
+  {% for tracking, pkgs in grouped_packages.items() %}
+    {% set all_packed = pkgs | selectattr('packed', 'equalto', true) | list | length == pkgs | length %}
     {% set any_missing_tracking = pkgs | selectattr('tracking_number', 'equalto', '') | list | length > 0 %}
     {% set section_class = 'green' if all_packed else ('red' if any_missing_tracking else 'yellow') %}
+    
     <div class="package-section {{ section_class }}">
       <div class="package-header" onclick="toggleDropdown(this)">
         <span class="tracking-info">
@@ -88,6 +89,7 @@
           {{ pkgs | selectattr('packed', 'equalto', false) | list | length }} Unpacked
         </span>
       </div>
+      
       <div class="package-body">
         {% if pkgs[0].tracking_number %}
         <div class="package-actions">
@@ -97,18 +99,22 @@
           </form>
         </div>
         {% endif %}
+        
         {% for pkg in pkgs %}
         <div class="package-item">
           <div><strong>ID#</strong>: {{ pkg.order_number }}</div>
           <div><strong>Product</strong>: {{ pkg.product_name }}</div>
-          {% if order.label_url %}
-          <a href="{{ order.label_url }}" class="preview-label" target="_blank">🔍 Preview Label</a>
+
+          {% if pkg.label_url %}
+            <a href="{{ pkg.label_url }}" class="preview-label" target="_blank">🔍 Preview Label</a>
           {% endif %}
+
           <button class="toggle-packed {% if pkg.packed %}packed{% endif %}" onclick="togglePacked('{{ pkg.order_number }}', this)">
             {% if pkg.packed %}✅ Packed{% else %}❌ Unpacked{% endif %}
           </button>
+
           {% if not pkg.tracking_number %}
-          <button class="add-usps" onclick="openUspsModal('{{ pkg.order_number }}')">➕ Add USPS Number</button>
+            <button class="add-usps" onclick="openUspsModal('{{ pkg.order_number }}')">➕ Add USPS Number</button>
           {% endif %}
         </div>
         {% endfor %}
@@ -116,6 +122,7 @@
     </div>
   {% endfor %}
 </div>
+
 
 <!-- Modal for Adding USPS -->
 <div id="uspsModal" class="modal">
