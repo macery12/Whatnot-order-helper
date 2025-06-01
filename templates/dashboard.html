@@ -85,15 +85,66 @@
 </form>
 
 <div class="dashboard-container">
-  {% for user, orders in data.items() %}
-    <div class="user-section {{ status_by_user[user] }}">
-      <div class="user-header">
-        <span>{{ user }}</span>
-        <span style="font-size: 0.8rem;">
-          🟢 Packed: {{ orders | selectattr('packed') | list | length }}
-          | 🟠 Unpacked: {{ orders | rejectattr('packed') | list | length }}
-        </span>
+
+  <!-- Example: Package Group with Tracking -->
+  <div class="package-section green">
+    <div class="package-header" onclick="toggleDropdown(this)">
+      <span class="tracking-info">📦 347842 - JohnDoe</span>
+      <span class="status">2 Packed / 0 Unpacked</span>
+    </div>
+    <div class="package-body">
+      <div class="package-actions">
+        <form action="/upload/12345" method="post" enctype="multipart/form-data">
+          <input type="file" name="image" accept="image/*">
+          <button class="upload-photo">📸 Upload Photos for Package</button>
+        </form>
       </div>
+      <div class="package-item">
+        <div><strong>ID#</strong>: 12345</div>
+        <div><strong>Product</strong>: Magic Beans</div>
+        <a class="preview-label" href="/generate_label/12345" target="_blank">🔍 Preview Label</a>
+        <button class="toggle-packed packed" onclick="togglePacked('12345', this)">✅ Packed</button>
+      </div>
+      <div class="package-item">
+        <div><strong>ID#</strong>: 12346</div>
+        <div><strong>Product</strong>: Spell Candle</div>
+        <a class="preview-label" href="/generate_label/12346" target="_blank">🔍 Preview Label</a>
+        <button class="toggle-packed packed" onclick="togglePacked('12346', this)">✅ Packed</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Example: Missing USPS Tracking -->
+  <div class="package-section red">
+    <div class="package-header" onclick="toggleDropdown(this)">
+      <span class="tracking-info">❌ Missing USPS - JaneSmith</span>
+      <span class="status">0 Packed / 1 Unpacked</span>
+    </div>
+    <div class="package-body">
+      <div class="package-item">
+        <div><strong>ID#</strong>: 67890</div>
+        <div><strong>Product</strong>: Crystal Ball</div>
+        <a class="preview-label" href="/generate_label/67890" target="_blank">🔍 Preview Label</a>
+        <button class="toggle-packed" onclick="togglePacked('67890', this)">❌ Unpacked</button>
+        <button class="add-usps" onclick="openUspsModal('67890')">➕ Add USPS Number</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal for Adding USPS -->
+<div id="uspsModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeUspsModal()">&times;</span>
+    <h3>Enter USPS Tracking Number</h3>
+    <form onsubmit="submitUsps(event)">
+      <input type="text" id="uspsInput" placeholder="Enter tracking number" required />
+      <input type="hidden" id="targetOrderId" />
+      <button type="submit">Save</button>
+    </form>
+  </div>
+</div>
 
       <div class="user-orders">
         {% if status_by_user[user] == 'missing-tracking' %}
