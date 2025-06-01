@@ -37,24 +37,11 @@ h1 {
 }
 
 .upload-box {
-  background-color: #1a1a1a;
-  border-left: 4px solid #ff3c3c;
-  padding: 20px;
-  border-radius: 8px;
-  max-width: 600px;
-  flex: 1;
+  order: 1; /* Second in row */
 }
 
 .packer-box {
-  background-color: #1a1a1a;
-  border-left: 4px solid #ff3c3c;
-  padding: 20px;
-  border-radius: 8px;
-  max-width: 300px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  order: 0; /* First in row */
 }
 
 .packer-box select {
