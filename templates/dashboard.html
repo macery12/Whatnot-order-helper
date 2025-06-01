@@ -103,7 +103,7 @@
             <h3>📷 Take Photo</h3>
             <video id="cameraStream-{{ pkgs[0].order_number }}" autoplay playsinline style="width: 100%; border-radius: 6px;"></video>
             <button class="upload-photo-camera" onclick="capturePhoto('{{ pkgs[0].order_number }}')">📸 Capture</button>
-            <form id="cameraUploadForm-{{ pkgs[0].order_number }}" action="/upload/{{ pkgs[0].order_number }}" method="POST" enctype="multipart/form-data">
+            <form id="cameraUploadForm-{{ pkgs[0].order_number }}" action="/upload_image/{{ pkgs[0].order_number }}" method="POST" enctype="multipart/form-data">
               <input type="hidden" name="image" id="capturedImageInput-{{ pkgs[0].order_number }}">
             </form>
           </div>
