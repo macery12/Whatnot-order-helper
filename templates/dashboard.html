@@ -112,7 +112,7 @@
         <div class="package-item">
           <div><strong>ID#</strong>: {{ pkg.order_number }}</div>
           <div><strong>Product</strong>: {{ pkg.product_name }}</div>
-          <a class="preview-label" href="{{ url_for('generate_label', order_number=pkg.order_number) }}" target="_blank">🔍 Preview Label</a>
+          <a class="preview-label" href="{{ url_for('label', order_number=pkg.order_number) }}" target="_blank">🔍 Preview Label</a>
           <button class="toggle-packed {% if pkg.packed %}packed{% endif %}" onclick="togglePacked('{{ pkg.order_number }}', this)">
             {% if pkg.packed %}✅ Packed{% else %}❌ Unpacked{% endif %}
           </button>
