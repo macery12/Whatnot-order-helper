@@ -28,7 +28,7 @@ h1 {
 
 .header-controls {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: flex-start;
   flex-wrap: wrap;
   gap: 20px;
@@ -37,11 +37,24 @@ h1 {
 }
 
 .upload-box {
-  order: 1; /* Second in row */
+  background-color: #1a1a1a;
+  border-left: 4px solid #ff3c3c;
+  padding: 20px;
+  border-radius: 8px;
+  width: 360px;
+  flex-shrink: 0;
 }
 
 .packer-box {
-  order: 0; /* First in row */
+  background-color: #1a1a1a;
+  border-left: 4px solid #ff3c3c;
+  padding: 20px;
+  border-radius: 8px;
+  width: 300px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .packer-box select {
