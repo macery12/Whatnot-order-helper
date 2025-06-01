@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -85,52 +84,46 @@
 </form>
 
 <div class="dashboard-container">
-{% for tracking, pkgs in grouped_packages.items() %}
-  <!-- Example: Package Group with Tracking -->
-  <div class="package-section green">
-    <div class="package-header" onclick="toggleDropdown(this)">
-      <span class="tracking-info">📦 347842 - JohnDoe</span>
-      <span class="status">2 Packed / 0 Unpacked</span>
-    </div>
-    <div class="package-body">
-      <div class="package-actions">
-        <form action="/upload/12345" method="post" enctype="multipart/form-data">
-          <input type="file" name="image" accept="image/*">
-          <button class="upload-photo">📸 Upload Photos for Package</button>
-        </form>
+  {% for tracking, pkgs in grouped_packages.items() %}
+    <div class="package-section {% if pkgs[0].tracking_number %}green{% else %}red{% endif %}">
+      <div class="package-header" onclick="toggleDropdown(this)">
+        <span class="tracking-info">
+          {% if pkgs[0].tracking_number %}
+            📦 {{ pkgs[0].tracking_number[-6:] }} - {{ pkgs[0].username }}
+          {% else %}
+            ❌ Missing USPS - {{ pkgs[0].username }}
+          {% endif %}
+        </span>
+        <span class="status">
+          {{ pkgs | selectattr('packed', 'equalto', true) | list | length }} Packed /
+          {{ pkgs | selectattr('packed', 'equalto', false) | list | length }} Unpacked
+        </span>
       </div>
-      <div class="package-item">
-        <div><strong>ID#</strong>: 12345</div>
-        <div><strong>Product</strong>: Magic Beans</div>
-        <a class="preview-label" href="/generate_label/12345" target="_blank">🔍 Preview Label</a>
-        <button class="toggle-packed packed" onclick="togglePacked('12345', this)">✅ Packed</button>
-      </div>
-      <div class="package-item">
-        <div><strong>ID#</strong>: 12346</div>
-        <div><strong>Product</strong>: Spell Candle</div>
-        <a class="preview-label" href="/generate_label/12346" target="_blank">🔍 Preview Label</a>
-        <button class="toggle-packed packed" onclick="togglePacked('12346', this)">✅ Packed</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Example: Missing USPS Tracking -->
-  <div class="package-section red">
-    <div class="package-header" onclick="toggleDropdown(this)">
-      <span class="tracking-info">❌ Missing USPS - JaneSmith</span>
-      <span class="status">0 Packed / 1 Unpacked</span>
-    </div>
-    <div class="package-body">
-      <div class="package-item">
-        <div><strong>ID#</strong>: 67890</div>
-        <div><strong>Product</strong>: Crystal Ball</div>
-        <a class="preview-label" href="/generate_label/67890" target="_blank">🔍 Preview Label</a>
-        <button class="toggle-packed" onclick="togglePacked('67890', this)">❌ Unpacked</button>
-        <button class="add-usps" onclick="openUspsModal('67890')">➕ Add USPS Number</button>
+      <div class="package-body">
+        {% if pkgs[0].tracking_number %}
+        <div class="package-actions">
+          <form action="/upload/{{ pkgs[0].order_number }}" method="post" enctype="multipart/form-data">
+            <input type="file" name="image" accept="image/*">
+            <button class="upload-photo">📸 Upload Photos for Package</button>
+          </form>
+        </div>
+        {% endif %}
+        {% for pkg in pkgs %}
+        <div class="package-item">
+          <div><strong>ID#</strong>: {{ pkg.order_number }}</div>
+          <div><strong>Product</strong>: {{ pkg.product_name }}</div>
+          <a class="preview-label" href="{{ url_for('generate_label', order_number=pkg.order_number) }}" target="_blank">🔍 Preview Label</a>
+          <button class="toggle-packed {% if pkg.packed %}packed{% endif %}" onclick="togglePacked('{{ pkg.order_number }}', this)">
+            {% if pkg.packed %}✅ Packed{% else %}❌ Unpacked{% endif %}
+          </button>
+          {% if not pkg.tracking_number %}
+          <button class="add-usps" onclick="openUspsModal('{{ pkg.order_number }}')">➕ Add USPS Number</button>
+          {% endif %}
+        </div>
+        {% endfor %}
       </div>
     </div>
-  </div>
-
+  {% endfor %}
 </div>
 
 <!-- Modal for Adding USPS -->
@@ -145,164 +138,62 @@
     </form>
   </div>
 </div>
-
-      <div class="user-orders">
-        {% if status_by_user[user] == 'missing-tracking' %}
-        <form class="bundle-tracking-form" action="{{ url_for('add_tracking_group') }}" method="POST">
-          <input type="hidden" name="username" value="{{ user }}">
-          <input type="text" name="tracking_number" placeholder="Add tracking # for all {{ user }} orders">
-          <button type="submit">➕</button>
-        </form>
-        {% endif %}
-
-        {% set first_order = orders[0] %}
-        <div class="upload-image-block">
-          {% if first_order.image_id %}
-            <a href="{{ url_for('uploaded_file', filename=first_order.image_id) }}" target="_blank">
-              <img src="{{ url_for('uploaded_file', filename=first_order.image_id) }}" class="thumbnail" alt="Order Image">
-            </a>
-          {% endif %}
-          <form class="auto-submit-upload" action="{{ url_for('upload_image', order_number=first_order.order_number) }}" method="POST" enctype="multipart/form-data">
-            <label class="file-upload-btn">
-              📷 <span class="upload-label">Upload Order Images</span>
-              <input type="file" name="image" accept="image/*" capture="environment" required>
-            </label>
-          </form>
-        </div>
-
-        {% for pkg in orders %}
-          {% set card_class = 'order-card' %}
-          {% if pkg.tracking_number and pkg.packed %}
-            {% set card_class = card_class ~ ' packed' %}
-          {% elif pkg.tracking_number and not pkg.packed %}
-            {% set card_class = card_class ~ ' needs-packing' %}
-          {% elif not pkg.tracking_number %}
-            {% set card_class = card_class ~ ' missing-tracking' %}
-          {% endif %}
-
-          <div class="{{ card_class }}">
-            <div class="order-info">
-              {% if pkg.label_url %}
-              <div class="label-preview">
-                <a href="{{ pkg.label_url }}" target="_blank" class="label-button">🎟️ Preview Label</a>
-              </div>
-            {% endif %}
-
-              <div><strong>Order #:</strong> {{ pkg.order_number }}</div>
-              <div><strong>Product:</strong> {{ pkg.product_name }}</div>
-              <div><strong>ID #:</strong> {{ pkg.identifier }}</div>
-              {% if pkg.packers %}
-                <div><strong>Packed by:</strong> {{ pkg.packers }}</div>
-              {% endif %}
-              <div><strong>Tracking:</strong>
-                {% if pkg.tracking_number %}
-                  {{ pkg.tracking_number[-6:] }}
-                  <span class="badge tracking">Has Tracking</span>
-                {% else %}
-                  <span class="badge no-tracking">Missing</span>
-                {% endif %}
-              </div>
-              <div>
-                <strong>Packed:</strong>
-                <button class="packed-btn" data-order="{{ pkg.order_number }}" data-packed="{{ pkg.packed|string }}">
-                  {{ '✅' if pkg.packed else '❌' }}
-                </button>
-                <span class="badge {{ 'packed' if pkg.packed else 'unpacked' }}">
-                  {{ 'Packed' if pkg.packed else 'Needs Packing' }}
-                </span>
-              </div>
-            </div>
-          </div>
-        {% endfor %}
-      </div>
-    </div>
-  {% endfor %}
-</div>
-
 <script>
-function toggleDropdown() {
-  const list = document.getElementById('dropdownList');
-  list.style.display = list.style.display === 'block' ? 'none' : 'block';
+function toggleDropdown(headerEl) {
+  const section = headerEl.closest('.package-section');
+  const body = section.querySelector('.package-body');
+  body.style.display = body.style.display === 'block' ? 'none' : 'block';
 }
 
-document.addEventListener('click', function (e) {
-  const box = document.querySelector('.dropdown-box');
-  if (!box.contains(e.target)) {
-    document.getElementById('dropdownList').style.display = 'none';
-  }
-});
-
-// Optional: Live initials display (on check)
-document.addEventListener("DOMContentLoaded", function () {
-  const checkboxes = document.querySelectorAll('.dropdown-list input[type="checkbox"]');
-  const selectedText = document.getElementById('selectedText');
-  checkboxes.forEach(cb => {
-    cb.addEventListener('change', () => {
-      const selected = Array.from(checkboxes)
-        .filter(i => i.checked)
-        .map(i => i.value.split(" ").map(p => p[0]).join(""))
-        .join(" + ");
-      selectedText.textContent = selected || "Click to select…";
-    });
-  });
-});
-document.addEventListener("DOMContentLoaded", function () {
-  document.querySelectorAll('.user-header').forEach(header => {
-    header.addEventListener('click', () => {
-      const parent = header.closest('.user-section');
-      parent.classList.toggle('active');
-    });
-  });
-
-  document.body.addEventListener('click', async function (e) {
-    const button = e.target.closest('.packed-btn');
-    if (!button) return;
-
-    e.preventDefault();
-    const order = button.dataset.order;
-    const currentPacked = button.dataset.packed === 'True';
-
-    if (currentPacked) {
-      const confirmUnpack = confirm("⚠️ This order is already packed.\nAre you sure you want to mark it as unpacked?");
-      if (!confirmUnpack) return;
-    }
-
-    const newPacked = !currentPacked;
-
-    const response = await fetch('/api/toggle_packed', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ order_number: order, packed: newPacked })
-    });
-
-    if (response.ok) {
-      button.textContent = newPacked ? '✅' : '❌';
-      button.dataset.packed = String(newPacked);
-      const badge = button.nextElementSibling;
-      if (badge && badge.classList.contains('badge')) {
-        badge.className = 'badge ' + (newPacked ? 'packed' : 'unpacked');
-        badge.textContent = newPacked ? 'Packed' : 'Needs Packing';
-      }
+function togglePacked(orderId, btn) {
+  fetch(`/toggle_packed/${orderId}`, {
+    method: 'POST'
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      btn.classList.toggle('packed');
+      btn.textContent = data.packed ? '✅ Packed' : '❌ Unpacked';
     } else {
-      alert("❌ Failed to update packed status.");
+      alert('Error updating packed status');
     }
-  });
-});
-</script>
+  })
+  .catch(() => alert('Failed to update packed status'));
+}
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  document.querySelectorAll('.auto-submit-upload input[type="file"]').forEach(input => {
-    input.addEventListener('change', function () {
-      if (this.files.length > 0) {
-        const labelSpan = this.closest('label').querySelector('.upload-label');
-        if (labelSpan) labelSpan.textContent = "Uploading...";
-        this.closest('form').submit();
-      }
-    });
-  });
-});
-</script>
+function openUspsModal(orderId) {
+  document.getElementById('uspsModal').style.display = 'block';
+  document.getElementById('targetOrderId').value = orderId;
+}
 
+function closeUspsModal() {
+  document.getElementById('uspsModal').style.display = 'none';
+}
+
+function submitUsps(e) {
+  e.preventDefault();
+  const tracking = document.getElementById('uspsInput').value;
+  const orderId = document.getElementById('targetOrderId').value;
+
+  fetch(`/update_tracking`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ order_id: orderId, tracking_number: tracking })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      alert(`Tracking number saved for order ${orderId}`);
+      location.reload();
+    } else {
+      alert('Failed to save tracking number');
+    }
+  })
+  .catch(() => alert('Server error'));
+  closeUspsModal();
+}
+</script>
 </body>
 </html>
