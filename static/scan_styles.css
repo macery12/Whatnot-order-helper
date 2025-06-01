@@ -301,9 +301,10 @@ h1 {
   background-color: #c82333;
 }
 .modal-content video {
+  display: none;
   width: 100%;
   border-radius: 6px;
-  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 /* Camera capture button inside modal */
@@ -334,6 +335,21 @@ h1 {
 .upload-photo-camera:hover {
   background-color: #e53935;
   transform: scale(1.03);
+}
+/* Show the video when a class is toggled */
+.modal-content.active video {
+  display: block;
+}
+
+/* Default modal size (shrunk) */
+.modal-content {
+  width: 280px;
+  transition: width 0.3s ease;
+}
+
+/* Expanded size when active */
+.modal-content.active {
+  width: 360px;
 }
 
 /* Responsive */

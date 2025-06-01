@@ -215,7 +215,10 @@ document.addEventListener("DOMContentLoaded", function () {
 function openCameraModal(orderNumber) {
   const modal = document.getElementById(`cameraModal-${orderNumber}`);
   const video = document.getElementById(`cameraStream-${orderNumber}`);
+  const modalContent = modal.querySelector('.modal-content');
+  
   modal.style.display = 'block';
+  modalContent.classList.add('active');
 
   navigator.mediaDevices.getUserMedia({ video: true })
     .then(stream => {
@@ -228,13 +231,17 @@ function openCameraModal(orderNumber) {
 function closeCameraModal(orderNumber) {
   const modal = document.getElementById(`cameraModal-${orderNumber}`);
   const video = document.getElementById(`cameraStream-${orderNumber}`);
+  const modalContent = modal.querySelector('.modal-content');
+  
   modal.style.display = 'none';
+  modalContent.classList.remove('active');
 
   if (video.srcObject) {
     video.srcObject.getTracks().forEach(track => track.stop());
     video.srcObject = null;
   }
 }
+
 
 function capturePhoto(orderNumber) {
   const video = document.getElementById(`cameraStream-${orderNumber}`);
