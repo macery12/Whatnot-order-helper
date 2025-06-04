@@ -12,7 +12,7 @@
 </div>
 
 
-<h1>📦 Whatnot Orders Dashboard</h1>
+<h1><a href="/" style="color: #ff3c3c; text-decoration: none;">📦 Whatnot Orders Dashboard</a></h1>
 <div class="header-controls"></div>
 <div class="upload-box">
   <h3>📥 Import CSV</h3>
@@ -37,7 +37,7 @@
       <option value="">-- Select Packer --</option>
       {% for person in packer_names %}
         <option value="{{ person }}"
-          {% if person in session.get('active_packers', []) %}selected{% endif %}>
+          {% if person in active_packers %}>
           {{ person }}
         </option>
       {% endfor %}

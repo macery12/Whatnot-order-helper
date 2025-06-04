@@ -334,7 +334,18 @@ h1 {
   margin: 0 15px;
   color: #ff3c3c;
 }
-
+.package-item {
+  border: 1px solid #333;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border-left: 4px solid #444;
+  border-radius: 8px;
+  background: #1e1e1e;
+}
+.top-actions {
+  position: relative;
+  z-index: 10;
+}
 @media (max-width: 768px) {
   .header-controls {
     display: flex;

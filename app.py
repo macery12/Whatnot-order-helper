@@ -61,28 +61,20 @@ def index():
     total_unpacked = total_orders - total_packed
 
     # Group by tracking_number or fallback
-    raw_grouped = defaultdict(list)
+    filtered_packages = []
     for pkg in all_packages:
         if query and query not in (pkg.username.lower() + pkg.product_name.lower()):
             continue
         if selected_date and selected_label:
             if pkg.show_date != selected_date or pkg.show_label != selected_label:
                 continue
-        key = pkg.tracking_number.strip() if pkg.tracking_number else f"missing_{pkg.username}_{pkg.order_number}"
-        raw_grouped[key].append(pkg)
+        filtered_packages.append(pkg)
 
-    # Sort groups by first package's username (case-insensitive)
-        grouped_packages = defaultdict(list)
+    grouped_packages = defaultdict(list)
+    for pkg in filtered_packages:
+        key = pkg.tracking_number.strip() if pkg.tracking_number else f"missing-{pkg.username.lower()}"
+        grouped_packages[key].append(pkg)
 
-        for pkg in all_packages:
-            if pkg.tracking_number:
-                key = pkg.tracking_number
-            else:
-                # Group by a unique key per user for all missing tracking numbers
-                key = f"missing-{pkg.username.lower()}"
-            grouped_packages[key].append(pkg)
-
-        # Optional: Sort alphabetically by username
         grouped_packages = dict(sorted(grouped_packages.items(), key=lambda kv: kv[1][0].username.lower()))
 
     user_packers = {}
@@ -101,6 +93,7 @@ def index():
         query=query,
         shows=get_shows(),
         selected_show=selected_show
+        active_packers=session.get('active_packers', [])
     )
 
 
@@ -419,6 +412,16 @@ def confirm_pack():
     session_db.close()
     flash(f"{updated} order(s) marked as packed.")
     return redirect(url_for('scan'))
+
+@app.route('/update_tracking', methods=['POST'])
+def update_tracking():
+    data = request.get_json()
+    order_id = data.get('order_id')
+    tracking_number = data.get('tracking_number')
+    if order_id and tracking_number:
+        update_tracking_number(order_id, tracking_number)
+        return jsonify({'success': True})
+    return jsonify({'success': False}), 400
 
 
 if __name__ == '__main__':
