@@ -92,7 +92,7 @@ def index():
         packer_names=PACKER_NAMES,
         query=query,
         shows=get_shows(),
-        selected_show=selected_show
+        selected_show=selected_show,
         active_packers=session.get('active_packers', [])
     )
 
