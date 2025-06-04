@@ -60,7 +60,7 @@ def index():
     total_packed = len([p for p in all_packages if p.packed])
     total_unpacked = total_orders - total_packed
 
-    # Group by tracking_number or fallback
+        # Group by tracking_number or fallback
     filtered_packages = []
     for pkg in all_packages:
         if query and query not in (pkg.username.lower() + pkg.product_name.lower()):
@@ -70,12 +70,14 @@ def index():
                 continue
         filtered_packages.append(pkg)
 
+    # Group by tracking number or fallback key
     grouped_packages = defaultdict(list)
     for pkg in filtered_packages:
         key = pkg.tracking_number.strip() if pkg.tracking_number else f"missing-{pkg.username.lower()}"
         grouped_packages[key].append(pkg)
 
-        grouped_packages = dict(sorted(grouped_packages.items(), key=lambda kv: kv[1][0].username.lower()))
+    # Convert to regular dict sorted by username
+    grouped_packages = dict(sorted(grouped_packages.items(), key=lambda kv: kv[1][0].username.lower()))
 
     user_packers = {}
     for pkg in all_packages:
