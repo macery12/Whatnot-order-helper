@@ -36,15 +36,13 @@
     <select name="active_packers">
       <option value="">-- Select Packer --</option>
       {% for person in packer_names %}
-        <option value="{{ person }}"
-          {% if person in active_packers %}>
+        <option value="{{ person }}" {% if person in active_packers %}selected{% endif %}>
           {{ person }}
         </option>
       {% endfor %}
     </select>
     <button type="submit">Save</button>
   </form>
-</div>
 </div>
 <div class="summary-bar">
   Total Orders: <span>{{ total_orders }}</span>
