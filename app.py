@@ -98,6 +98,18 @@ def index():
         active_packers=session.get('active_packers', [])
     )
 
+from database import Base, engine
+
+@app.route('/admin/reset_db', methods=['POST'])
+def reset_db_route():
+    # Optional: Add basic protection
+    secret = request.form.get('secret')
+    if secret != 'letmein':  # Change this to something secure
+        return "Unauthorized", 403
+
+    Base.metadata.drop_all(engine)
+    Base.metadata.create_all(engine)
+    return "✅ Database has been wiped and reset.", 200
 
 @app.route('/add_tracking_group', methods=['POST'])
 def add_tracking_group():
