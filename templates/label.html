@@ -6,169 +6,166 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-  font-family: Arial, sans-serif;
-  background-color: #1e1e1e;
-  color: #f0f0f0;
-  padding: 40px;
-}
+      font-family: Arial, sans-serif;
+      background-color: #1e1e1e;
+      color: #f0f0f0;
+      padding: 40px;
+    }
 
-h2 {
-  text-align: center;
-  margin-bottom: 20px;
-}
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
 
-form {
-  text-align: center;
-  padding: 0 10px;
-}
+    form {
+      text-align: center;
+      padding: 0 10px;
+    }
 
-form input[type="text"] {
-  margin: 6px;
-  padding: 6px;
-  border: none;
-  border-radius: 4px;
-  font-size: 16px;
-  width: 180px;
-}
+    form input[type="text"] {
+      margin: 6px;
+      padding: 6px;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      width: 180px;
+    }
 
-form label {
-  display: block;
-  margin-top: 8px;
-}
+    form label {
+      display: block;
+      margin-top: 8px;
+    }
 
-form button {
-  padding: 8px 16px;
-  background-color: #ff3333;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 16px;
-  cursor: pointer;
-  margin-top: 16px;
-}
+    form button {
+      padding: 8px 16px;
+      background-color: #ff3333;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 16px;
+    }
 
-.label-select {
-  margin: 8px;
-  padding: 8px;
-  border: none;
-  border-radius: 5px;
-  font-size: 16px;
-  background-color: #333;
-  color: white;
-}
+    .label-select {
+      margin: 8px;
+      padding: 8px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      background-color: #333;
+      color: white;
+    }
 
-.print-button {
-  margin-top: 10px;
-  text-align: center;
-}
+    .print-button {
+      margin-top: 20px;
+      text-align: center;
+    }
 
-.label-preview-wrapper {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-}
+    .label-preview-wrapper {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
 
-.label-preview {
-  transform: scale(1.3);
-  transform-origin: top center;
-}
+    .label-preview {
+      transform: scale(1.3);
+      transform-origin: top center;
+    }
 
-.label {
-  background-color: white;
-  color: black;
-  border: 1px solid black;
-  width: 2in;
-  height: 1in;
-  padding: 4px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-evenly;
-  box-sizing: border-box;
-  font-size: 10px;
-  position: relative;
-}
+    .label {
+      background-color: white;
+      color: black;
+      border: 1px solid black;
+      width: 2in;
+      height: 1in;
+      padding: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-evenly;
+      box-sizing: border-box;
+      font-size: 10px;
+      position: relative;
+    }
 
-.company {
-  font-weight: bold;
-  font-size: 10px;
-}
+    .company {
+      font-weight: bold;
+      font-size: 10px;
+    }
 
-.info-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  width: 90%;
-  font-size: 8px;
-  margin: 0;
-  padding: 0;
-}
+    .info-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      width: 90%;
+      font-size: 8px;
+      margin: 0;
+      padding: 0;
+    }
 
-.info-bar div {
-  flex: 1;
-  text-align: center;
-}
+    .info-bar div {
+      flex: 1;
+      text-align: center;
+    }
 
-.divider {
-  width: 90%;
-  border-top: 1px solid black;
-  margin: 0;
-}
+    .divider {
+      width: 90%;
+      border-top: 1px solid black;
+      margin: 0;
+    }
 
-.username {
-  font-size: 9px;
-  text-align: center;
-  max-width: 95%;
-  line-height: 1.1;
-  margin-top: 2px;
-}
+    .username {
+      font-size: 9px;
+      text-align: center;
+      max-width: 95%;
+      line-height: 1.1;
+      margin-top: 2px;
+    }
 
-.barcode {
-  margin-top: 2px;
-  max-height: 20px;
-  width: 70px;
-}
+    .barcode {
+      margin-top: 2px;
+      max-height: 20px;
+      width: 70px;
+    }
 
-@media print {
-  body * {
-    visibility: hidden;
-  }
-  .label, .label * {
-    visibility: visible;
-  }
-  .label {
-    position: absolute;
-    top: 0;
-    left: 0;
-  }
-  .label-preview {
-    transform: none !important;
-  }
-  .label-preview-wrapper {
-    display: block;
-    margin: 0;
-  }
-}
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      .label, .label * {
+        visibility: visible;
+      }
+      .label {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+      .label-preview {
+        transform: none !important;
+      }
+      .label-preview-wrapper {
+        display: block;
+        margin: 0;
+      }
+    }
 
-/* ✅ Mobile Enhancements */
-@media (max-width: 600px) {
-  form input[type="text"],
-  .label-select,
-  form button,
-  .print-button button {
-    width: 100% !important;
-    font-size: 16px;
-    padding: 12px;
-    margin: 10px auto;
-    box-sizing: border-box;
-  }
+    @media (max-width: 600px) {
+      form input[type="text"],
+      .label-select,
+      form button,
+      .print-button button {
+        width: 100% !important;
+        font-size: 16px;
+        padding: 12px;
+        margin: 10px auto;
+        box-sizing: border-box;
+      }
 
-  .label-preview {
-    transform: scale(1.1);
-  }
-}
-
-
+      .label-preview {
+        transform: scale(1.1);
+      }
+    }
   </style>
 </head>
 <body>
@@ -196,47 +193,40 @@ form button {
 
     <br>
     <button type="submit">Generate Label</button>
-
-    {% if label %}
-    <div class="print-button">
-      <button onclick="window.print()">🖨️ Print Label</button>
-    </div>
-    {% endif %}
   </form>
 
   {% if label %}
-<div class="print-button">
-  <button onclick="window.print()">🖨️ Print Label</button>
-</div>
+  <div class="print-button">
+    <button onclick="window.print()"style="padding: 8px 16px; background-color: #ff3333; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-top: 16px;">🖨️ Print Label</button>
+  </div>
 
-<div class="label-preview-wrapper">
-  <div class="label-preview">
-    <div class="label">
-      {% if not label.hide_company %}
-      <div class="company">Tyco Connections</div>
-      {% endif %}
-
-      <div class="info-bar">
-        {% if not label.hide_date %}
-        <div>{{ label.date }}</div>
-        {% else %}
-        <div></div>
+  <div class="label-preview-wrapper">
+    <div class="label-preview">
+      <div class="label">
+        {% if not label.hide_company %}
+        <div class="company">Tyco Connections</div>
         {% endif %}
-        <div>#{{ label.id }}</div>
-        <div>{{ label.item_name }}</div>
+
+        <div class="info-bar">
+          {% if not label.hide_date %}
+          <div>{{ label.date }}</div>
+          {% else %}
+          <div></div>
+          {% endif %}
+          <div>#{{ label.id }}</div>
+          <div>{{ label.item_name }}</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="username">{{ label.name }}</div>
+
+        {% if label.barcode_image %}
+        <img class="barcode" src="data:image/png;base64,{{ label.barcode_image }}">
+        {% endif %}
       </div>
-
-      <div class="divider"></div>
-
-      <div class="username">{{ label.name }}</div>
-
-      {% if label.barcode_image %}
-      <img class="barcode" src="data:image/png;base64,{{ label.barcode_image }}">
-      {% endif %}
     </div>
   </div>
-</div>
-{% endif %}
-
+  {% endif %}
 </body>
 </html>
