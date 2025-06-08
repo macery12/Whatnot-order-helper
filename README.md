@@ -71,21 +71,21 @@ services:
     image: ghcr.io/macery12/whatnot-order-helper:latest
     container_name: whatnot-flask-app
     ports:
-      - 1689:5000
+      - 5000:5000
     volumes:
-      - /whatnot/names.py:/app/names.py #employee names listing
+      - /{FOLDER-NAME-HERE)/names.py:/app/names.py #employee names listing
     restart: always
     depends_on: []
     environment:
-      - DATABASE_URL=postgresql://TYCO:TYCOCONECTIONS@postgress:5432/whatnotdb
+      - DATABASE_URL=
   postgress:
     image: postgres:15
     container_name: whatnot-postgres
     restart: always
     environment:
-      POSTGRES_USER: TYCO
-      POSTGRES_PASSWORD: TYCOCONECTIONS
-      POSTGRES_DB: whatnotdb
+      POSTGRES_USER: 
+      POSTGRES_PASSWORD: 
+      POSTGRES_DB: 
     volumes:
       - whatnot_pgdata:/var/lib/postgresql/data
     ports:
@@ -105,7 +105,7 @@ docker-compose up -d
 And access via:
 
 ```
-http://localhost:1689
+http://localhost:5000
 ```
 
 ---
