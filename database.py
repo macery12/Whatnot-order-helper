@@ -8,6 +8,11 @@ import os
 db_url = os.getenv(
     "DATABASE_URL" 
 )
+if not db_url:
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+    DB_PATH = os.path.join(BASE_DIR, 'instance', 'whatnot_test.db')
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    db_url = f"sqlite:///{DB_PATH}"
 
 engine = create_engine(db_url, echo=False)
 Session = sessionmaker(bind=engine)

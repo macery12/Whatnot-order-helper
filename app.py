@@ -11,6 +11,8 @@ from PIL import Image
 from names import PACKER_NAMES
 import base64
 from io import BytesIO
+import barcode
+from barcode.writer import ImageWriter
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'images')
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -371,20 +373,31 @@ def label():
     if request.method == 'POST':
         id_number = request.form.get('id_number')
         name = request.form.get('name')
+        item_name = request.form.get('item_name', '')
         selected_label = request.form.get('label_size', selected_label)
         hide_company = 'hide_company' in request.form
         hide_date = 'hide_date' in request.form
         width, height = LABEL_SIZES.get(selected_label, ('2', '1'))
         today = datetime.today().strftime('%m/%d/%Y')
 
+        barcode_string = f"{item_name}|{id_number}|{name}"
+
+        # Generate barcode image (Code128 for alphanumeric support)
+        buffer = BytesIO()
+        barcode_class = barcode.get('code128', barcode_string, writer=ImageWriter())
+        barcode_class.write(buffer, {'module_height': 5.0, 'font_size': 6, 'quiet_zone': 1})
+        barcode_base64 = base64.b64encode(buffer.getvalue()).decode()
+
         label_data = {
             'id': id_number,
             'name': name,
+            'item_name': item_name,
             'date': today,
             'hide_company': hide_company,
             'hide_date': hide_date,
             'width': width,
-            'height': height
+            'height': height,
+            'barcode_image': barcode_base64
         }
 
         response = make_response(render_template('label.html', label=label_data,
