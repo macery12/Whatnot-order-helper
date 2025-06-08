@@ -60,18 +60,18 @@
       text-align: center;
     }
 
-    .label-container {
+    .label-fixed-preview {
       display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      margin-top: 30px;
+      justify-content: center;
+      bottom: 150px;
+      left: 0;
+      width: 100%;
+      z-index: 10;
     }
 
     .label-preview {
-      transform: scale(2); /* Zoom for screen */
-      transform-origin: top left;
-      margin-left: 0;
-      margin-bottom: 20px;
+      transform: scale(2);
+      transform-origin: top center;
     }
 
     .label {
@@ -142,9 +142,9 @@
         top: 0;
         left: 0;
       }
-
-      .label-preview {
+      .label-fixed-preview {
         transform: none !important;
+        position: static;
       }
     }
   </style>
@@ -174,16 +174,16 @@
 
     <br>
     <button type="submit">Generate Label</button>
+
+    {% if label %}
+    <div class="print-button">
+      <button onclick="window.print()">🖨️ Print Label</button>
+    </div>
+    {% endif %}
   </form>
 
-  <div class="print-button">
-    {% if label %}
-    <button onclick="window.print()">🖨️ Print Label</button>
-    {% endif %}
-  </div>
-
   {% if label %}
-  <div class="label-container">
+  <div class="label-fixed-preview">
     <div class="label-preview">
       <div class="label">
         {% if not label.hide_company %}
