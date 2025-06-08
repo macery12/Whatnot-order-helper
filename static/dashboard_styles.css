@@ -26,6 +26,18 @@ h1 {
   border-radius: 5px;
   border: none;
 }
+.label-button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background-color: #ff3c3c;
+  color: black;
+  padding: 8px 16px;
+  text-decoration: none;
+  font-weight: bold;
+  border-radius: 5px;
+  border: none;
+}
 
 .header-controls {
   display: flex;
@@ -347,6 +359,10 @@ h1 {
 .top-actions {
   position: relative;
   z-index: 10;
+}
+.topl-actions {
+  position: relative;
+  z-index: 100;
 }
 @media (max-width: 768px) {
   .header-controls {
