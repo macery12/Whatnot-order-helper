@@ -462,20 +462,18 @@ def scan_pair():
         if not data:
             return redirect(url_for('scan_pair'))
 
-        # USPS tracking scan (long, numeric)
+        # USPS tracking scan
         if data.isdigit() and len(data) > 20:
-            if session.get('active_usps') == data:
-                # Finalize: commit session items to DB
-                new_usps = data
+            if active_usps == data:
+                # Final scan of same USPS = commit session
                 items = session.get('scanned_items', [])
                 db_session = Session()
-
                 for item in items:
                     try:
                         product_name, item_id, username = [x.strip() for x in item.split('|')]
                     except ValueError:
-                        flash(f"⚠️ Bad scan format: '{item}'", 'error')
-
+                        flash(f"⚠️ Malformed item scan: '{item}'", 'error')
+                        continue
                     pkg = Package(
                         username=username,
                         order_number='',
@@ -484,30 +482,27 @@ def scan_pair():
                         bundled=False,
                         cancelled=False,
                         packed=False,
-                        tracking_number=new_usps,
+                        tracking_number=data,
                         show_date='',
                         show_label='',
                         image_ids='',
                         item_id=item_id
                     )
                     db_session.add(pkg)
-
                 db_session.commit()
                 db_session.close()
-
-                flash(f"Saved {len(items)} items to USPS: {new_usps}", 'info')
+                flash(f"✅ Saved {len(items)} items to USPS: {data}", 'success')
                 session.pop('active_usps', None)
                 session.pop('scanned_items', None)
             else:
                 session['active_usps'] = data
                 session['scanned_items'] = []
         else:
-            # Item scan
             session['scanned_items'].append(data)
 
         return redirect(url_for('scan_pair'))
 
-    # On GET: show any existing items already saved to DB
+    # Pull existing items from DB if active USPS exists
     if active_usps:
         db_session = Session()
         existing_items = db_session.query(Package).filter_by(tracking_number=active_usps).all()
