@@ -20,10 +20,23 @@
         .section h3 { border-bottom: 1px solid #444; padding-bottom: 5px; color: #ccc; }
         ul { list-style: none; padding: 0; }
         li { background: #222; margin: 5px 0; padding: 10px; border-radius: 5px; }
+        .flash { margin: 10px auto; padding: 10px; background: #333; color: #fff; border-left: 4px solid #ff3c3c; width: 80%; max-width: 700px; text-align: left; }
     </style>
 </head>
 <body>
     <h1>📦 Scan Pairing Station</h1>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="section">
+            {% for category, message in messages %}
+            <div class="flash">{{ message }}</div>
+            {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
     <form action="{{ url_for('scan_pair') }}" method="POST">
         <input type="text" name="scan_input" placeholder="Scan USPS or Item..." autofocus autocomplete="off">
     </form>
@@ -55,5 +68,21 @@
         </div>
         {% endif %}
     {% endif %}
+
+    <!-- Auto-submit scan input -->
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const input = document.querySelector('input[name="scan_input"]');
+        if (input) {
+            input.addEventListener("input", function () {
+                if (this.value.trim().length > 3) {
+                    setTimeout(() => {
+                        if (this.value.trim() !== '') this.form.submit();
+                    }, 150);
+                }
+            });
+        }
+    });
+    </script>
 </body>
 </html>
