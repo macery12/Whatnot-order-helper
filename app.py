@@ -13,6 +13,8 @@ import base64
 from io import BytesIO
 import barcode
 from barcode.writer import ImageWriter
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import inch
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'images')
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -364,58 +366,49 @@ def set_packers():
 @app.route('/label', methods=['GET', 'POST'])
 def label():
     label_data = None
-
-    selected_label = request.cookies.get('label_size', 'Standard (2 x 1)')
-    hide_company = request.cookies.get('hide_company', 'false') == 'true'
-    hide_date = request.cookies.get('hide_date', 'false') == 'true'
-    width, height = LABEL_SIZES.get(selected_label, ('2', '1'))
+    label_sizes = LABEL_SIZES
 
     if request.method == 'POST':
-        id_number = request.form.get('id_number')
-        name = request.form.get('name')
-        item_name = request.form.get('item_name', '')
-        selected_label = request.form.get('label_size', selected_label)
+        id_number = request.form.get('id_number', '').strip()
+        name = request.form.get('name', '').strip()
+        item_name = request.form.get('item_name', '').strip()
+        label_size = request.form.get('label_size', 'Standard (2 x 1)')
         hide_company = 'hide_company' in request.form
         hide_date = 'hide_date' in request.form
-        width, height = LABEL_SIZES.get(selected_label, ('2', '1'))
-        today = datetime.today().strftime('%m/%d/%Y')
 
-        barcode_string = f"{item_name}|{id_number}|{name}"
+        today_str = datetime.now().strftime('%Y-%m-%d')
+        width_in, height_in = map(float, label_sizes[label_size])
+        pdf_path = f'static/labels/{id_number}_{uuid4().hex}.pdf'
 
-        # Generate barcode image (Code128 for alphanumeric support)
-        buffer = BytesIO()
-        barcode_class = barcode.get('code128', barcode_string, writer=ImageWriter())
-        barcode_class.write(buffer, {'module_height': 5.0, 'font_size': 6, 'quiet_zone': 1})
-        barcode_base64 = base64.b64encode(buffer.getvalue()).decode()
+        os.makedirs('static/labels', exist_ok=True)
+        c = canvas.Canvas(pdf_path, pagesize=(width_in * inch, height_in * inch))
 
-        label_data = {
-            'id': id_number,
-            'name': name,
-            'item_name': item_name,
-            'date': today,
-            'hide_company': hide_company,
-            'hide_date': hide_date,
-            'width': width,
-            'height': height,
-            'barcode_image': barcode_base64
-        }
+        if not hide_company:
+            c.setFont("Helvetica-Bold", 8)
+            c.drawString(5, height_in * inch - 12, "Tyco Connections")
 
-        response = make_response(render_template('label.html', label=label_data,
-                                                 label_sizes=LABEL_SIZES,
-                                                 selected_label=selected_label,
-                                                 hide_company=hide_company,
-                                                 hide_date=hide_date))
-        response.set_cookie('label_size', selected_label)
-        response.set_cookie('hide_company', str(hide_company).lower())
-        response.set_cookie('hide_date', str(hide_date).lower())
-        return response
+        if not hide_date:
+            c.setFont("Helvetica", 6)
+            c.drawString(5, height_in * inch - 22, today_str)
 
-    return render_template('label.html',
-                           label=None,
-                           label_sizes=LABEL_SIZES,
-                           selected_label=selected_label,
-                           hide_company=hide_company,
-                           hide_date=hide_date)
+        c.setFont("Helvetica", 6)
+        c.drawRightString(width_in * inch - 5, height_in * inch - 22, f"#{id_number}")
+        c.setFont("Helvetica", 6)
+        c.drawCentredString(width_in * inch / 2, height_in * inch / 2 + 5, item_name[:25])
+        c.setFont("Helvetica-Bold", 8)
+        c.drawCentredString(width_in * inch / 2, height_in * inch / 2 - 10, name)
+
+        c.showPage()
+        c.save()
+
+        return render_template('label.html',
+                               pdf_url=pdf_path,
+                               label_sizes=label_sizes,
+                               selected_label=label_size,
+                               hide_company=hide_company,
+                               hide_date=hide_date)
+
+    return render_template('label.html', label_sizes=label_sizes, selected_label='Standard (2 x 1)')
 
 @app.route('/confirm_pack', methods=['POST'])
 def confirm_pack():
