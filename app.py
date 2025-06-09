@@ -493,8 +493,7 @@ def scan_pair():
                     pkg = Package(
                         username=username,
                         product_name=product_name,
-                        item_id=item_id,
-                        order_number='',
+                        order_number=item_id,
                         timestamp=str(datetime.now()),
                         tracking_number=data,
                         bundled=False,
