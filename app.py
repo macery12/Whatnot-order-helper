@@ -27,7 +27,7 @@ LABEL_SIZES = {
     'Standard (2 x 1)': ('2', '1'),
     'Large (3 x 1.5)': ('3', '1.5')
 }
-
+scan_sessions = {}
 
 @app.route('/set_active_packers', methods=['POST'])
 def set_active_packers():
@@ -467,64 +467,75 @@ def update_tracking():
     return jsonify({'success': False}), 400
 @app.route('/scan-pair', methods=['GET', 'POST'])
 def scan_pair():
-    if 'scanned_items' not in session:
-        session['scanned_items'] = []
-
-    existing_items = []
     active_usps = session.get('active_usps')
+    scanned_items = scan_sessions.get(active_usps, [])
+    existing_items = []
 
     if request.method == 'POST':
         data = request.form.get('scan_input', '').strip()
+        flash(f"Scanned: {data}")
+
         if not data:
+            flash("⚠️ Empty scan input")
             return redirect(url_for('scan_pair'))
 
-        # USPS tracking scan
+        # USPS tracking number scan
         if data.isdigit() and len(data) > 20:
             if active_usps == data:
-                # Final scan of same USPS = commit session
-                items = session.get('scanned_items', [])
+                # 📦 Second scan of same USPS → commit to DB
                 db_session = Session()
-                for item in items:
+                for item in scan_sessions.get(data, []):
                     try:
                         product_name, item_id, username = [x.strip() for x in item.split('|')]
                     except ValueError:
-                        flash(f"⚠️ Malformed item scan: '{item}'", 'error')
+                        flash(f"⚠️ Malformed: {item}")
                         continue
                     pkg = Package(
                         username=username,
-                        order_number='',
                         product_name=product_name,
+                        item_id=item_id,
+                        order_number='',
                         timestamp=str(datetime.now()),
+                        tracking_number=data,
                         bundled=False,
                         cancelled=False,
                         packed=False,
-                        tracking_number=data,
                         show_date='',
                         show_label='',
-                        image_ids='',
-                        item_id=item_id
+                        image_ids=''
                     )
                     db_session.add(pkg)
                 db_session.commit()
                 db_session.close()
-                flash(f"✅ Saved {len(items)} items to USPS: {data}", 'success')
+
+                flash(f"✅ Saved {len(scan_sessions.get(data, []))} items to USPS: {data}")
+                scan_sessions.pop(data, None)
                 session.pop('active_usps', None)
-                session.pop('scanned_items', None)
             else:
+                # 🆕 First scan of USPS
                 session['active_usps'] = data
-                session['scanned_items'] = []
+                scan_sessions[data] = []
+                flash(f"📬 Started new USPS session: {data}")
         else:
-            session['scanned_items'].append(data)
+            # 🧾 Item scan
+            if active_usps:
+                scan_sessions.setdefault(active_usps, []).append(data)
+                flash(f"✅ Added item to {active_usps}: {data}")
+            else:
+                flash("❗ Scan a USPS label first.")
 
         return redirect(url_for('scan_pair'))
 
-    # Pull existing items from DB if active USPS exists
+    # GET: load existing saved items from DB for display
     if active_usps:
         db_session = Session()
         existing_items = db_session.query(Package).filter_by(tracking_number=active_usps).all()
         db_session.close()
 
-    return render_template('scan_pair.html', existing_items=existing_items)
+    return render_template('scan_pair.html',
+                           active_usps=active_usps,
+                           scanned_items=scan_sessions.get(active_usps, []),
+                           existing_items=existing_items)
 
 
 if __name__ == '__main__':
