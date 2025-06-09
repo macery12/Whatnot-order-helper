@@ -411,14 +411,15 @@ def label():
             c.drawString(4, y_cursor, today_str)
         c.drawCentredString(label_width / 2, y_cursor, item_name[:20])
         c.drawRightString(label_width - 4, y_cursor, f"#{id_number}")
-        y_cursor -= 14
+        y_cursor -= 16  # Slightly increased space before barcode
 
-        # Barcode (lower half)
+        # Barcode
         barcode_string = f"{item_name} | {id_number} | {name}"
         barcode_obj = code128.Code128(barcode_string, barHeight=10 * mm, barWidth=0.28)
         barcode_width = barcode_obj.width
         barcode_x = (label_width - barcode_width) / 2
-        barcode_obj.drawOn(c, barcode_x, max(y_cursor - 12, 4))
+        barcode_y = max(y_cursor - 10, 4)  # Shifted down more
+        barcode_obj.drawOn(c, barcode_x, barcode_y)
 
         c.showPage()
         c.save()
