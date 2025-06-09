@@ -126,13 +126,24 @@
     <button type="submit">Generate Label</button>
   </form>
 
-  {% if pdf_url %}
-  <div class="print-button">
-    <a href="{{ url_for('static', filename=pdf_url.split('static/')[-1]) }}" target="_blank">
-      <button>📄 View PDF Label</button>
-    </a>
-  </div>
-  {% endif %}
+      {{% if pdf_url %}
+    <div class="print-button">
+      <button onclick="printPDF()">🖨️ Print Label</button>
+    </div>
+
+    <div style="margin-top: 20px; text-align: center;">
+      <iframe id="pdfPreview" src="{{ url_for('static', filename=pdf_url.split('static/')[-1]) }}#toolbar=0"
+              width="300" height="150" style="border: 1px solid #ccc;"></iframe>
+    </div>
+
+    <script>
+    function printPDF() {
+      const iframe = document.getElementById('pdfPreview');
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    }
+    </script>
+    {% endif %}
 
   {% if barcode_image %}
   <div class="label-preview-wrapper">
