@@ -411,7 +411,7 @@ def label():
             c.drawString(4, y_cursor, today_str)
         c.drawCentredString(label_width / 2, y_cursor, item_name[:20])
         c.drawRightString(label_width - 4, y_cursor, f"#{id_number}")
-        y_cursor -= 8  # Slightly increased space before barcode
+        y_cursor -= 32  # Slightly increased space before barcode
 
         # Barcode
         barcode_string = f"{item_name} | {id_number} | {name}"
