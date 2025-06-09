@@ -474,7 +474,7 @@ def scan_pair():
                     try:
                         product_name, item_id, username = [x.strip() for x in item.split('|')]
                     except ValueError:
-                        continue  # skip malformed
+                        flash(f"⚠️ Bad scan format: '{item}'", 'error')
 
                     pkg = Package(
                         username=username,
