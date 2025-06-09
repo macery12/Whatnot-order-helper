@@ -367,7 +367,6 @@ def set_packers():
 
 @app.route('/label', methods=['GET', 'POST'])
 def label():
-    label_data = None
     label_sizes = LABEL_SIZES
 
     if request.method == 'POST':
@@ -384,36 +383,42 @@ def label():
         pdf_path = os.path.join('static', 'labels', pdf_filename)
         os.makedirs('static/labels', exist_ok=True)
 
-        # Create PDF
         c = canvas.Canvas(pdf_path, pagesize=(width_in * inch, height_in * inch))
+        label_width = width_in * inch
+        label_height = height_in * inch
 
-        # Optional: Add Company Name
+        y_cursor = label_height - 10
+
+        # Company Name
         if not hide_company:
             c.setFont("Helvetica-Bold", 8)
-            c.drawString(5, height_in * inch - 12, "Tyco Connections")
+            c.drawCentredString(label_width / 2, y_cursor, "Tyco Connections")
+            y_cursor -= 10
 
-        # Optional: Add Date
+        # Divider line
+        c.setLineWidth(0.5)
+        c.line(4, y_cursor, label_width - 4, y_cursor)
+        y_cursor -= 10
+
+        # Top Info: Date | ID | Item
+        c.setFont("Helvetica", 6)
         if not hide_date:
-            c.setFont("Helvetica", 6)
-            c.drawString(5, height_in * inch - 22, today_str)
-
-        # Order ID
-        c.setFont("Helvetica", 6)
-        c.drawRightString(width_in * inch - 5, height_in * inch - 22, f"#{id_number}")
-
-        # Item name (centered)
-        c.setFont("Helvetica", 6)
-        c.drawCentredString(width_in * inch / 2, height_in * inch / 2 + 5, item_name[:25])
+            c.drawString(4, y_cursor, today_str)
+        c.drawCentredString(label_width / 2, y_cursor, item_name[:20])
+        c.drawRightString(label_width - 4, y_cursor, f"#{id_number}")
+        y_cursor -= 12
 
         # Username
         c.setFont("Helvetica-Bold", 8)
-        c.drawCentredString(width_in * inch / 2, height_in * inch / 2 - 10, name)
+        c.drawCentredString(label_width / 2, y_cursor, name)
+        y_cursor -= 20
 
-        # Add barcode
-        barcode_obj = code128.Code128(id_number, barHeight=10*mm, barWidth=0.3)
+        # Barcode input
+        barcode_string = f"{item_name} | {id_number} | {name}"
+        barcode_obj = code128.Code128(barcode_string, barHeight=12 * mm, barWidth=0.3)
         barcode_width = barcode_obj.width
-        barcode_x = (width_in * inch - barcode_width) / 2
-        barcode_obj.drawOn(c, barcode_x, 5)
+        barcode_x = (label_width - barcode_width) / 2
+        barcode_obj.drawOn(c, barcode_x, y_cursor)
 
         c.showPage()
         c.save()
