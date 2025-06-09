@@ -454,15 +454,18 @@ def scan_pair():
     if 'scanned_items' not in session:
         session['scanned_items'] = []
 
+    existing_items = []
+    active_usps = session.get('active_usps')
+
     if request.method == 'POST':
         data = request.form.get('scan_input', '').strip()
         if not data:
             return redirect(url_for('scan_pair'))
 
-        # USPS label scan
+        # USPS tracking scan (long, numeric)
         if data.isdigit() and len(data) > 20:
             if session.get('active_usps') == data:
-                # Save all scanned items to DB
+                # Finalize: commit session items to DB
                 new_usps = data
                 items = session.get('scanned_items', [])
                 db_session = Session()
@@ -471,7 +474,7 @@ def scan_pair():
                     try:
                         product_name, item_id, username = [x.strip() for x in item.split('|')]
                     except ValueError:
-                        continue  # Skip malformed strings
+                        continue  # skip malformed
 
                     pkg = Package(
                         username=username,
@@ -498,14 +501,20 @@ def scan_pair():
             else:
                 session['active_usps'] = data
                 session['scanned_items'] = []
-
         else:
             # Item scan
             session['scanned_items'].append(data)
 
         return redirect(url_for('scan_pair'))
 
-    return render_template('scan_pair.html')
+    # On GET: show any existing items already saved to DB
+    if active_usps:
+        db_session = Session()
+        existing_items = db_session.query(Package).filter_by(tracking_number=active_usps).all()
+        db_session.close()
+
+    return render_template('scan_pair.html', existing_items=existing_items)
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=1689, host="0.0.0.0")
