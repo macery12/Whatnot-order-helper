@@ -15,6 +15,8 @@ import barcode
 from barcode.writer import ImageWriter
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import inch
+from reportlab.graphics.barcode import code128
+from reportlab.lib.units import mm
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'images')
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -378,40 +380,50 @@ def label():
 
         today_str = datetime.now().strftime('%Y-%m-%d')
         width_in, height_in = map(float, label_sizes[label_size])
-        pdf_path = f'static/labels/{id_number}_{uuid4().hex}.pdf'
-
+        pdf_filename = f"{id_number}_{uuid4().hex}.pdf"
+        pdf_path = os.path.join('static', 'labels', pdf_filename)
         os.makedirs('static/labels', exist_ok=True)
+
+        # Create PDF
         c = canvas.Canvas(pdf_path, pagesize=(width_in * inch, height_in * inch))
 
+        # Optional: Add Company Name
         if not hide_company:
             c.setFont("Helvetica-Bold", 8)
             c.drawString(5, height_in * inch - 12, "Tyco Connections")
 
+        # Optional: Add Date
         if not hide_date:
             c.setFont("Helvetica", 6)
             c.drawString(5, height_in * inch - 22, today_str)
 
+        # Order ID
         c.setFont("Helvetica", 6)
         c.drawRightString(width_in * inch - 5, height_in * inch - 22, f"#{id_number}")
+
+        # Item name (centered)
         c.setFont("Helvetica", 6)
         c.drawCentredString(width_in * inch / 2, height_in * inch / 2 + 5, item_name[:25])
+
+        # Username
         c.setFont("Helvetica-Bold", 8)
         c.drawCentredString(width_in * inch / 2, height_in * inch / 2 - 10, name)
+
+        # Add barcode
+        barcode_obj = code128.Code128(id_number, barHeight=10*mm, barWidth=0.3)
+        barcode_width = barcode_obj.width
+        barcode_x = (width_in * inch - barcode_width) / 2
+        barcode_obj.drawOn(c, barcode_x, 5)
 
         c.showPage()
         c.save()
 
-        code128 = barcode.get('code128', id_number, writer=ImageWriter())
-        buffer = BytesIO()
-        code128.write(buffer)
-        barcode_image = base64.b64encode(buffer.getvalue()).decode('utf-8')
         return render_template('label.html',
                                pdf_url=pdf_path,
                                label_sizes=label_sizes,
                                selected_label=label_size,
                                hide_company=hide_company,
-                               hide_date=hide_date,
-                               barcode_image=barcode_image)
+                               hide_date=hide_date)
 
     return render_template('label.html', label_sizes=label_sizes, selected_label='Standard (2 x 1)')
 
