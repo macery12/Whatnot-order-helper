@@ -1,102 +1,115 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Scan Pair</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <style>
-        body { background: #111; color: #eee; font-family: 'Segoe UI', sans-serif; text-align: center; }
-        h1 { color: #ff3c3c; margin-bottom: 20px; }
-        input[type="text"] {
-            font-size: 1.5rem;
-            padding: 10px;
-            width: 80%;
-            max-width: 600px;
-            border-radius: 10px;
-            border: none;
-            margin-bottom: 20px;
-        }
-        .section { margin: 30px auto; width: 80%; max-width: 700px; }
-        .section h3 { border-bottom: 1px solid #444; padding-bottom: 5px; color: #ccc; }
-        ul { list-style: none; padding: 0; }
-        li { background: #222; margin: 5px 0; padding: 10px; border-radius: 5px; }
-        .flash { margin: 10px auto; padding: 10px; background: #333; color: #fff; border-left: 4px solid #ff3c3c; width: 80%; max-width: 700px; text-align: left; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Scan Pair</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    body { background: #111; color: #eee; font-family: 'Segoe UI', sans-serif; text-align: center; }
+    h1 { color: #ff3c3c; margin-bottom: 20px; }
+    input[type="text"] {
+      font-size: 1.5rem;
+      padding: 10px;
+      width: 80%;
+      max-width: 600px;
+      border-radius: 10px;
+      border: none;
+      margin-bottom: 20px;
+    }
+    .section {
+      margin: 30px auto;
+      width: 80%;
+      max-width: 700px;
+    }
+    .section h3 {
+      border-bottom: 1px solid #444;
+      padding-bottom: 5px;
+      color: #ccc;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      background: #222;
+      margin: 5px 0;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .flash {
+      margin: 10px auto;
+      padding: 10px;
+      background: #333;
+      color: #fff;
+      border-left: 4px solid #ff3c3c;
+      width: 80%;
+      max-width: 700px;
+      text-align: left;
+    }
+  </style>
 </head>
 <body>
-    <h1>📦 Scan Pairing Station</h1>
+  <h1>📦 Scan Pairing Station</h1>
 
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div class="section">
-            {% for category, message in messages %}
-            <div class="flash">{{ message }}</div>
-            {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="section">
+        {% for category, message in messages %}
+        <div class="flash">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
 
-    <form action="{{ url_for('scan_pair') }}" method="POST">
-        <input type="text" name="scan_input" placeholder="Scan USPS or Item..." autofocus autocomplete="off">
-    </form>
+  <form action="{{ url_for('scan_pair') }}" method="POST">
+    <input type="text" name="scan_input" placeholder="Scan USPS or Item..." autofocus autocomplete="off">
+  </form>
 
-    {% if session.get('active_usps') %}
-        <div class="section">
-            <h3>📬 Active USPS Label: {{ session['active_usps'] }}</h3>
-        </div>
+  {% if active_usps %}
+    <div class="section">
+      <h3>📬 Active USPS Label: {{ active_usps }}</h3>
+    </div>
 
-        {% if existing_items %}
-        <div class="section">
-            <h3>✅ Items Already Saved:</h3>
-            <ul>
-                {% for item in existing_items %}
-                <li>{{ item.product_name }} | {{ item.item_id }} | {{ item.username }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
-
-        {% if session.get('scanned_items') %}
-        <div class="section">
-            <h3>🆕 Scanned This Session:</h3>
-            <ul>
-                {% for item in session['scanned_items'] %}
-                <li>{{ item }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
+    {% if existing_items %}
+    <div class="section">
+      <h3>✅ Items Already Saved:</h3>
+      <ul>
+        {% for item in existing_items %}
+        <li>{{ item.product_name }} | {{ item.order_number }} | {{ item.username }}</li>
+        {% endfor %}
+      </ul>
+    </div>
     {% endif %}
 
-    <!-- Auto-submit scan input -->
-    <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const input = document.querySelector('input[name="scan_input"]');
-        if (input) {
-            input.addEventListener("input", function () {
-                if (this.value.trim().length > 3) {
-                    setTimeout(() => {
-                        if (this.value.trim() !== '') this.form.submit();
-                    }, 150);
-                }
-            });
-        }
-    });
-    document.addEventListener("DOMContentLoaded", function () {
+    <div class="section">
+      <h3>🆕 Scanned This Session:</h3>
+      {% if scanned_items %}
+        <ul>
+          {% for item in scanned_items %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p style="color:#888;">No items scanned yet.</p>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <!-- Auto-submit scan input -->
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
     const input = document.querySelector('input[name="scan_input"]');
     if (input) {
-        input.addEventListener("input", function () {
-            console.log("Input received:", this.value);  // DEBUG
-            if (this.value.trim().length > 3) {
-                setTimeout(() => {
-                    if (this.value.trim() !== '') this.form.submit();
-                }, 150);
-            }
-        });
+      input.addEventListener("input", function () {
+        if (this.value.trim().length > 3) {
+          setTimeout(() => {
+            if (this.value.trim()) this.form.submit();
+          }, 150);
+        }
+      });
     }
-});
-
-    </script>
+  });
+  </script>
 </body>
 </html>

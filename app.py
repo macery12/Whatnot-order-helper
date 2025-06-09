@@ -500,7 +500,7 @@ def scan_pair():
                         tracking_number=data,
                         bundled=False,
                         cancelled=False,
-                        packed=False,
+                        packed=True,
                         show_date='',
                         show_label='',
                         image_ids=''
