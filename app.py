@@ -449,7 +449,63 @@ def update_tracking():
         update_tracking_number(order_id, tracking_number)
         return jsonify({'success': True})
     return jsonify({'success': False}), 400
+@app.route('/scan-pair', methods=['GET', 'POST'])
+def scan_pair():
+    if 'scanned_items' not in session:
+        session['scanned_items'] = []
 
+    if request.method == 'POST':
+        data = request.form.get('scan_input', '').strip()
+        if not data:
+            return redirect(url_for('scan_pair'))
+
+        # USPS label scan
+        if data.isdigit() and len(data) > 20:
+            if session.get('active_usps') == data:
+                # Save all scanned items to DB
+                new_usps = data
+                items = session.get('scanned_items', [])
+                db_session = Session()
+
+                for item in items:
+                    try:
+                        product_name, item_id, username = [x.strip() for x in item.split('|')]
+                    except ValueError:
+                        continue  # Skip malformed strings
+
+                    pkg = Package(
+                        username=username,
+                        order_number='',
+                        product_name=product_name,
+                        timestamp=str(datetime.now()),
+                        bundled=False,
+                        cancelled=False,
+                        packed=False,
+                        tracking_number=new_usps,
+                        show_date='',
+                        show_label='',
+                        image_ids='',
+                        item_id=item_id
+                    )
+                    db_session.add(pkg)
+
+                db_session.commit()
+                db_session.close()
+
+                flash(f"Saved {len(items)} items to USPS: {new_usps}", 'info')
+                session.pop('active_usps', None)
+                session.pop('scanned_items', None)
+            else:
+                session['active_usps'] = data
+                session['scanned_items'] = []
+
+        else:
+            # Item scan
+            session['scanned_items'].append(data)
+
+        return redirect(url_for('scan_pair'))
+
+    return render_template('scan_pair.html')
 
 if __name__ == '__main__':
     app.run(debug=True, port=1689, host="0.0.0.0")

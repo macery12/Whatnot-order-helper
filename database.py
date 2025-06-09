@@ -36,6 +36,7 @@ class Package(Base):
     identifier = Column(String(20), nullable=True)
     packers = Column(Text, default="")
     label_url = Column(String, nullable=True)
+    item_id = Column(String(100))
 
 def init_db():
     Base.metadata.create_all(engine)

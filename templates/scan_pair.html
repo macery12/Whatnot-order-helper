@@ -1,0 +1,46 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Scan Pair</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body { background: #111; color: #eee; font-family: 'Segoe UI', sans-serif; text-align: center; }
+        h1 { color: #ff3c3c; margin-bottom: 20px; }
+        input[type="text"] {
+            font-size: 1.5rem;
+            padding: 10px;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 10px;
+            border: none;
+            margin-bottom: 20px;
+        }
+        .session-info { margin-top: 30px; }
+        .session-info h3 { color: #ccc; }
+        .item-list { list-style: none; padding: 0; margin-top: 10px; }
+        .item-list li { background: #222; margin: 5px auto; padding: 10px; width: 60%; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>📦 Scan Pairing Station</h1>
+    <form action="{{ url_for('scan_pair') }}" method="POST">
+        <input type="text" name="scan_input" placeholder="Scan USPS or Item..." autofocus autocomplete="off">
+    </form>
+
+    <div class="session-info">
+        {% if session.get('active_usps') %}
+            <h3>📬 Active USPS: {{ session['active_usps'] }}</h3>
+            {% if session.get('scanned_items') %}
+                <h3>🧾 Scanned Items:</h3>
+                <ul class="item-list">
+                    {% for item in session['scanned_items'] %}
+                        <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endif %}
+    </div>
+</body>
+</html>
