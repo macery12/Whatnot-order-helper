@@ -401,12 +401,17 @@ def label():
         c.showPage()
         c.save()
 
+        code128 = barcode.get('code128', id_number, writer=ImageWriter())
+        buffer = BytesIO()
+        code128.write(buffer)
+        barcode_image = base64.b64encode(buffer.getvalue()).decode('utf-8')
         return render_template('label.html',
                                pdf_url=pdf_path,
                                label_sizes=label_sizes,
                                selected_label=label_size,
                                hide_company=hide_company,
-                               hide_date=hide_date)
+                               hide_date=hide_date,
+                               barcode_image=barcode_image)
 
     return render_template('label.html', label_sizes=label_sizes, selected_label='Standard (2 x 1)')
 
