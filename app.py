@@ -473,61 +473,81 @@ def scan_pair():
 
     if request.method == 'POST':
         data = request.form.get('scan_input', '').strip()
-        flash(f"Scanned: {data}")
 
         if not data:
             flash("⚠️ Empty scan input")
             return redirect(url_for('scan_pair'))
 
-        # USPS tracking number scan
+        # USPS label logic
         if data.isdigit() and len(data) > 20:
             if active_usps == data:
-                # ✅ Final scan of same USPS → Save everything to DB
+                # Final scan of same USPS — commit items
                 items = scan_sessions.pop(data, [])
                 db_session = Session()
+                saved_count = 0
+
                 for item in items:
                     try:
                         product_name, item_id, username = [x.strip() for x in item.split('|')]
                     except ValueError:
-                        flash(f"⚠️ Malformed scan: {item}")
+                        flash(f"⚠️ Skipped malformed item: {item}")
+                        continue
+
+                    # Avoid saving duplicates already in DB
+                    if db_session.query(Package).filter_by(order_number=item_id, tracking_number=data).first():
+                        flash(f"⚠️ Skipped duplicate: {item}")
                         continue
 
                     pkg = Package(
                         username=username,
                         product_name=product_name,
-                        order_number=item_id,
+                        order_number=item_id,  # ID# for dashboard
+                        item_id=item_id,
                         timestamp=str(datetime.now()),
                         tracking_number=data,
                         bundled=False,
                         cancelled=False,
-                        packed=True,
+                        packed=True,  # ✅ Item is packed on scan
                         show_date='',
                         show_label='',
                         image_ids=''
                     )
                     db_session.add(pkg)
+                    saved_count += 1
 
                 db_session.commit()
                 db_session.close()
 
-                flash(f"✅ Saved {len(items)} item(s) to USPS: {data}")
                 session.pop('active_usps', None)
+                flash(f"✅ Saved {saved_count} item(s) to USPS: {data}")
             else:
-                # 📬 First scan of USPS tracking number
+                # Start new session
                 session['active_usps'] = data
                 scan_sessions[data] = []
-                flash(f"📦 Started new package session for: {data}")
+                flash(f"📬 New USPS package started: {data}")
+
         else:
-            # 🧾 Item scan (e.g., shoes | 489322 | macery12)
-            if active_usps:
-                scan_sessions.setdefault(active_usps, []).append(data)
-                flash(f"✅ Added item to {active_usps}: {data}")
-            else:
+            # Handle item scan (e.g., shoes | 32 | john)
+            if not active_usps:
                 flash("❗ Please scan a USPS label first.")
+                return redirect(url_for('scan_pair'))
+
+            if data in scan_sessions[active_usps]:
+                flash(f"⚠️ Duplicate item scan: {data}")
+                return redirect(url_for('scan_pair'))
+
+            # Check structure
+            if data.count('|') != 2:
+                flash("❗ Invalid item format. Use: product | ID# | username")
+                return redirect(url_for('scan_pair'))
+
+            # Clean + save
+            scan_sessions[active_usps].append(data)
+            flash(f"✅ Added item: {data}")
 
         return redirect(url_for('scan_pair'))
 
-    # GET: Show existing items in DB and live scanned ones
+    # GET view
     if active_usps:
         db_session = Session()
         existing_items = db_session.query(Package).filter_by(tracking_number=active_usps).all()
