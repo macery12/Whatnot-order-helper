@@ -387,38 +387,38 @@ def label():
         label_width = width_in * inch
         label_height = height_in * inch
 
-        y_cursor = label_height - 10
+        y_cursor = label_height - 8
 
         # Company Name
         if not hide_company:
-            c.setFont("Helvetica-Bold", 8)
+            c.setFont("Helvetica-Bold", 7)
             c.drawCentredString(label_width / 2, y_cursor, "Tyco Connections")
-            y_cursor -= 10
+            y_cursor -= 8
 
         # Divider line
         c.setLineWidth(0.5)
         c.line(4, y_cursor, label_width - 4, y_cursor)
         y_cursor -= 10
 
-        # Top Info: Date | ID | Item
+        # Top Row: Date | Item Name | ID#
         c.setFont("Helvetica", 6)
         if not hide_date:
             c.drawString(4, y_cursor, today_str)
         c.drawCentredString(label_width / 2, y_cursor, item_name[:20])
         c.drawRightString(label_width - 4, y_cursor, f"#{id_number}")
-        y_cursor -= 12
+        y_cursor -= 14
 
         # Username
-        c.setFont("Helvetica-Bold", 8)
+        c.setFont("Helvetica-Bold", 7)
         c.drawCentredString(label_width / 2, y_cursor, name)
-        y_cursor -= 20
+        y_cursor -= 14
 
-        # Barcode input
+        # Barcode
         barcode_string = f"{item_name} | {id_number} | {name}"
-        barcode_obj = code128.Code128(barcode_string, barHeight=12 * mm, barWidth=0.3)
+        barcode_obj = code128.Code128(barcode_string, barHeight=10 * mm, barWidth=0.28)
         barcode_width = barcode_obj.width
         barcode_x = (label_width - barcode_width) / 2
-        barcode_obj.drawOn(c, barcode_x, y_cursor)
+        barcode_obj.drawOn(c, barcode_x, max(y_cursor - 12, 4))
 
         c.showPage()
         c.save()
