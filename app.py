@@ -395,6 +395,11 @@ def label():
             c.drawCentredString(label_width / 2, y_cursor, "Tyco Connections")
             y_cursor -= 8
 
+        # Username (above line)
+        c.setFont("Helvetica-Bold", 7)
+        c.drawCentredString(label_width / 2, y_cursor, name)
+        y_cursor -= 8
+
         # Divider line
         c.setLineWidth(0.5)
         c.line(4, y_cursor, label_width - 4, y_cursor)
@@ -408,12 +413,7 @@ def label():
         c.drawRightString(label_width - 4, y_cursor, f"#{id_number}")
         y_cursor -= 14
 
-        # Username
-        c.setFont("Helvetica-Bold", 7)
-        c.drawCentredString(label_width / 2, y_cursor, name)
-        y_cursor -= 14
-
-        # Barcode
+        # Barcode (lower half)
         barcode_string = f"{item_name} | {id_number} | {name}"
         barcode_obj = code128.Code128(barcode_string, barHeight=10 * mm, barWidth=0.28)
         barcode_width = barcode_obj.width
