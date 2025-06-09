@@ -482,14 +482,16 @@ def scan_pair():
         # USPS tracking number scan
         if data.isdigit() and len(data) > 20:
             if active_usps == data:
-                # 📦 Second scan of same USPS → commit to DB
+                # ✅ Final scan of same USPS → Save everything to DB
+                items = scan_sessions.pop(data, [])
                 db_session = Session()
-                for item in scan_sessions.get(data, []):
+                for item in items:
                     try:
                         product_name, item_id, username = [x.strip() for x in item.split('|')]
                     except ValueError:
-                        flash(f"⚠️ Malformed: {item}")
+                        flash(f"⚠️ Malformed scan: {item}")
                         continue
+
                     pkg = Package(
                         username=username,
                         product_name=product_name,
@@ -504,37 +506,39 @@ def scan_pair():
                         image_ids=''
                     )
                     db_session.add(pkg)
+
                 db_session.commit()
                 db_session.close()
 
-                flash(f"✅ Saved {len(scan_sessions.get(data, []))} items to USPS: {data}")
-                scan_sessions.pop(data, None)
+                flash(f"✅ Saved {len(items)} item(s) to USPS: {data}")
                 session.pop('active_usps', None)
             else:
-                # 🆕 First scan of USPS
+                # 📬 First scan of USPS tracking number
                 session['active_usps'] = data
                 scan_sessions[data] = []
-                flash(f"📬 Started new USPS session: {data}")
+                flash(f"📦 Started new package session for: {data}")
         else:
-            # 🧾 Item scan
+            # 🧾 Item scan (e.g., shoes | 489322 | macery12)
             if active_usps:
                 scan_sessions.setdefault(active_usps, []).append(data)
                 flash(f"✅ Added item to {active_usps}: {data}")
             else:
-                flash("❗ Scan a USPS label first.")
+                flash("❗ Please scan a USPS label first.")
 
         return redirect(url_for('scan_pair'))
 
-    # GET: load existing saved items from DB for display
+    # GET: Show existing items in DB and live scanned ones
     if active_usps:
         db_session = Session()
         existing_items = db_session.query(Package).filter_by(tracking_number=active_usps).all()
         db_session.close()
 
-    return render_template('scan_pair.html',
-                           active_usps=active_usps,
-                           scanned_items=scan_sessions.get(active_usps, []),
-                           existing_items=existing_items)
+    return render_template(
+        'scan_pair.html',
+        active_usps=active_usps,
+        scanned_items=scan_sessions.get(active_usps, []),
+        existing_items=existing_items
+    )
 
 
 if __name__ == '__main__':
