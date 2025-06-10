@@ -501,13 +501,12 @@ def scan_pair():
                     pkg = Package(
                         username=username,
                         product_name=product_name,
-                        order_number=item_id,  # ID# for dashboard
-                        item_id=item_id,
+                        order_number=item_id,
                         timestamp=str(datetime.now()),
                         tracking_number=data,
                         bundled=False,
                         cancelled=False,
-                        packed=True,  # ✅ Item is packed on scan
+                        packed=True,
                         show_date='',
                         show_label='',
                         image_ids=''
