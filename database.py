@@ -23,9 +23,9 @@ class ScanSession(Base):
 
     id = Column(Integer, primary_key=True)
     tracking_number = Column(String(100), unique=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
     scanned_items = Column(Text)
     finalized = Column(Boolean, default=False)
+    timestamp = Column(DateTime, default=datetime.utcnow)
 
 class Package(Base):
     __tablename__ = 'packages'
