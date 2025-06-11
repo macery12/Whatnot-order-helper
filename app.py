@@ -28,7 +28,7 @@ LABEL_SIZES = {
     'Large (3 x 1.5)': ('3', '1.5')
 }
 scan_sessions = {}
-
+current_date = datetime.now().strftime("%-m/%-d/%Y")
 @app.route('/set_active_packers', methods=['POST'])
 def set_active_packers():
     selected = request.form.getlist('active_packers')
@@ -510,7 +510,7 @@ def scan_pair():
                         bundled=False,
                         cancelled=False,
                         packed=True,
-                        show_date='',
+                        show_date=current_date,
                         show_label='',
                         image_ids='',
                         packers=' + '.join(initials)
@@ -562,7 +562,7 @@ def scan_pair():
         scanned_items=scan_sessions.get(active_usps, []),
         existing_items=existing_items,
         packer_names=PACKER_NAMES,  # ← from names.py
-        active_packers=session.get('active_packers', [])
+        active_packers=session.get('active_packers', []),
     )
 
 

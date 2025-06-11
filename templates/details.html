@@ -46,8 +46,8 @@
       <p><strong>Show Date:</strong> {{ package.show_date }}</p>
       <p><strong>Show Label:</strong> {{ package.show_label }}</p>
       <p><strong>Packed:</strong> {{ '✅' if package.packed else '❌' }}</p>
-
-      {% if package.image_id %}
+      <p><strong>packed by:</strong> {{ package.packers }}</p>
+      {%if package.image_id %}
         <p><strong>Image:</strong></p>
         <a href="{{ url_for('uploaded_file', filename=package.image_id) }}" target="_blank">
           <img src="{{ url_for('uploaded_file', filename=package.image_id) }}" class="thumbnail">
