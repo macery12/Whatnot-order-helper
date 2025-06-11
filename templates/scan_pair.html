@@ -131,20 +131,5 @@ select:focus {
     </div>
   {% endif %}
 
-  <!-- Auto-submit scan input -->
-  <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const input = document.querySelector('input[name="scan_input"]');
-    if (input) {
-      input.addEventListener("input", function () {
-        if (this.value.trim().length > 3) {
-          setTimeout(() => {
-            if (this.value.trim()) this.form.submit();
-          }, 150);
-        }
-      });
-    }
-  });
-  </script>
 </body>
 </html>
