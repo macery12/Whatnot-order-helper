@@ -22,10 +22,10 @@ class ScanSession(Base):
     __tablename__ = 'scan_sessions'
 
     id = Column(Integer, primary_key=True)
-    usps_number = Column(String(40), index=True, nullable=False)
-    item_raw = Column(Text, nullable=False)  # e.g., shoes | 33 | john
-    timestamp = Column(DateTime, default=datetime.utcnow)
-    origin_ip = Column(String(100), default='')  # Optional: track who scanned it
+    tracking_number = Column(String(100), unique=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    scanned_items = Column(Text)  # pipe-delimited: shoes | 1 | john
+    finalized = Column(Boolean, default=False)  # ✅ Needed for session management
 
 class Package(Base):
     __tablename__ = 'packages'
