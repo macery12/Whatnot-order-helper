@@ -471,7 +471,7 @@ def update_tracking():
 def scan_pair():
     db_session = Session()
     active_session = db_session.query(ScanSession).filter_by(finalized=False).order_by(ScanSession.created_at.desc()).first()
-    active_usps = active_session.usps_number if active_session else None
+    active_usps = active_session.tracking_number if active_session else None
     scanned_items = active_session.scanned_items.split(',') if active_session and active_session.scanned_items else []
     existing_items = []
 
@@ -489,7 +489,7 @@ def scan_pair():
             current_date = datetime.now().strftime('%-m/%-d/%Y')
 
             # Finalize active session
-            if active_session and active_session.usps_number == data:
+            if active_session and active_session.tracking_number == data:
                 if active_session.timestamp and (datetime.now() - active_session.timestamp).total_seconds() > 180:
                     # Session expired
                     active_session.finalized = True
