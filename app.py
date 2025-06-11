@@ -17,6 +17,8 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import inch
 from reportlab.graphics.barcode import code128
 from reportlab.lib.units import mm
+import time
+
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'images')
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -28,7 +30,7 @@ LABEL_SIZES = {
     'Large (3 x 1.5)': ('3', '1.5')
 }
 scan_sessions = {}
-current_date = datetime.now().strftime("%-m/%-d/%Y")
+
 @app.route('/set_active_packers', methods=['POST'])
 def set_active_packers():
     selected = request.form.getlist('active_packers')
@@ -475,13 +477,25 @@ def scan_pair():
         data = request.form.get('scan_input', '').strip()
 
         if not data:
-            flash("⚠️ Empty scan input")
+            flash("\u26a0\ufe0f Empty scan input")
             return redirect(url_for('scan_pair'))
 
         # USPS label logic
         if data.isdigit() and len(data) > 20:
+            current_date = datetime.now().strftime('%-m/%-d/%Y')
+            now = time.time()
+
+            # Reuse session if same USPS is scanned again
             if active_usps == data:
-                # Final scan of same USPS — commit items
+                last_usps_time = session.get('usps_timestamp')
+                if last_usps_time and now - last_usps_time > 180:
+                    session.pop('active_usps', None)
+                    session.pop('usps_timestamp', None)
+                    scan_sessions.pop(active_usps, None)
+                    flash("\u23f1\ufe0f USPS session expired after 3 minutes of inactivity.")
+                    return redirect(url_for('scan_pair'))
+
+                # Commit items
                 items = scan_sessions.pop(data, [])
                 db_session = Session()
                 saved_count = 0
@@ -490,16 +504,14 @@ def scan_pair():
                     try:
                         product_name, item_id, username = [x.strip() for x in item.split('|')]
                     except ValueError:
-                        flash(f"⚠️ Skipped malformed item: {item}")
+                        flash(f"\u26a0\ufe0f Skipped malformed item: {item}")
                         continue
 
-                    # Avoid saving duplicates already in DB
                     if db_session.query(Package).filter_by(order_number=item_id, tracking_number=data).first():
-                        flash(f"⚠️ Skipped duplicate: {item}")
+                        flash(f"\u26a0\ufe0f Skipped duplicate: {item}")
                         continue
 
-                    initials = [''.join(part[0] for part in name.strip().split()) for name in
-                                session.get('active_packers', [])]
+                    initials = session.get('active_packers', [])
 
                     pkg = Package(
                         username=username,
@@ -522,29 +534,33 @@ def scan_pair():
                 db_session.close()
 
                 session.pop('active_usps', None)
+                session.pop('usps_timestamp', None)
                 flash(f"✅ Saved {saved_count} item(s) to USPS: {data}")
+
             else:
-                # Start new session
+                # Start new session or resume existing one
+                if data in scan_sessions:
+                    flash(f"📥 Continuing existing USPS session: {data}")
+                else:
+                    scan_sessions[data] = []
+                    flash(f"📥 New USPS package started: {data}")
+
                 session['active_usps'] = data
-                scan_sessions[data] = []
-                flash(f"📬 New USPS package started: {data}")
+                session['usps_timestamp'] = now
 
         else:
-            # Handle item scan (e.g., shoes | 32 | john)
             if not active_usps:
                 flash("❗ Please scan a USPS label first.")
                 return redirect(url_for('scan_pair'))
 
-            if data in scan_sessions[active_usps]:
+            if data in scan_sessions.get(active_usps, []):
                 flash(f"⚠️ Duplicate item scan: {data}")
                 return redirect(url_for('scan_pair'))
 
-            # Check structure
             if data.count('|') != 2:
                 flash("❗ Invalid item format. Use: product | ID# | username")
                 return redirect(url_for('scan_pair'))
 
-            # Clean + save
             scan_sessions[active_usps].append(data)
             flash(f"✅ Added item: {data}")
 
@@ -561,9 +577,10 @@ def scan_pair():
         active_usps=active_usps,
         scanned_items=scan_sessions.get(active_usps, []),
         existing_items=existing_items,
-        packer_names=PACKER_NAMES,  # ← from names.py
+        packer_names=PACKER_NAMES,
         active_packers=session.get('active_packers', []),
     )
+
 
 
 if __name__ == '__main__':
