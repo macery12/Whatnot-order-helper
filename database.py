@@ -1,8 +1,8 @@
-from sqlalchemy import create_engine, Column, Integer, String, Boolean, Text
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, Text, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
-
+from datetime import datetime
 
 # PostgreSQL database URL from environment variable (Docker-ready fallback)
 db_url = os.getenv(
@@ -17,6 +17,15 @@ if not db_url:
 engine = create_engine(db_url, echo=False)
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
+
+class ScanSession(Base):
+    __tablename__ = 'scan_sessions'
+
+    id = Column(Integer, primary_key=True)
+    usps_number = Column(String(40), index=True, nullable=False)
+    item_raw = Column(Text, nullable=False)  # e.g., shoes | 33 | john
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    origin_ip = Column(String(100), default='')  # Optional: track who scanned it
 
 class Package(Base):
     __tablename__ = 'packages'

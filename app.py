@@ -1,6 +1,6 @@
 
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, jsonify, session, make_response, flash
-from database import get_all_packages, init_db, update_packed, update_image_id, update_tracking_number, get_shows, Session, Package
+from database import get_all_packages, init_db, update_packed, update_image_id, update_tracking_number, get_shows, Session, Package, ScanSession
 from csv_decoder import import_csv
 from collections import defaultdict
 import os
@@ -469,116 +469,121 @@ def update_tracking():
     return jsonify({'success': False}), 400
 @app.route('/scan-pair', methods=['GET', 'POST'])
 def scan_pair():
-    active_usps = session.get('active_usps')
-    scanned_items = scan_sessions.get(active_usps, [])
-    existing_items = []
+    db_session = Session()
+    now = datetime.utcnow()
+
+    # Clean up old scan sessions (>3 minutes)
+    timeout_threshold = now - timedelta(minutes=3)
+    db_session.query(ScanSession).filter(ScanSession.timestamp < timeout_threshold).delete()
+    db_session.commit()
 
     if request.method == 'POST':
         data = request.form.get('scan_input', '').strip()
-
         if not data:
-            flash("\u26a0\ufe0f Empty scan input")
+            flash("⚠️ Empty scan input")
             return redirect(url_for('scan_pair'))
 
-        # USPS label logic
         if data.isdigit() and len(data) > 20:
-            current_date = datetime.now().strftime('%-m/%-d/%Y')
-            now = time.time()
+            # USPS label logic
+            usps_number = data
 
-            # Reuse session if same USPS is scanned again
-            if active_usps == data:
-                last_usps_time = session.get('usps_timestamp')
-                if last_usps_time and now - last_usps_time > 180:
-                    session.pop('active_usps', None)
-                    session.pop('usps_timestamp', None)
-                    scan_sessions.pop(active_usps, None)
-                    flash("\u23f1\ufe0f USPS session expired after 3 minutes of inactivity.")
-                    return redirect(url_for('scan_pair'))
+            active_scans = db_session.query(ScanSession).filter_by(usps_number=usps_number).all()
 
-                # Commit items
-                items = scan_sessions.pop(data, [])
-                db_session = Session()
+            if active_scans:
+                # Commit scans to Package
                 saved_count = 0
+                initials = request.cookies.get('active_packers', '') or 'Unknown'
+                current_date = datetime.now().strftime('%-m/%-d/%Y')
 
-                for item in items:
+                for scan in active_scans:
                     try:
-                        product_name, item_id, username = [x.strip() for x in item.split('|')]
+                        product_name, item_id, username = [x.strip() for x in scan.item_raw.split('|')]
                     except ValueError:
-                        flash(f"\u26a0\ufe0f Skipped malformed item: {item}")
+                        flash(f"⚠️ Skipped malformed item: {scan.item_raw}")
                         continue
 
-                    if db_session.query(Package).filter_by(order_number=item_id, tracking_number=data).first():
-                        flash(f"\u26a0\ufe0f Skipped duplicate: {item}")
+                    # Prevent duplicate save
+                    if db_session.query(Package).filter_by(order_number=item_id, tracking_number=usps_number).first():
+                        flash(f"⚠️ Skipped duplicate already saved: {item_id}")
                         continue
-
-                    initials = session.get('active_packers', [])
 
                     pkg = Package(
                         username=username,
                         product_name=product_name,
                         order_number=item_id,
                         timestamp=str(datetime.now()),
-                        tracking_number=data,
+                        tracking_number=usps_number,
                         bundled=False,
                         cancelled=False,
                         packed=True,
                         show_date=current_date,
                         show_label='',
                         image_ids='',
-                        packers=' + '.join(initials)
+                        packers=initials
                     )
                     db_session.add(pkg)
                     saved_count += 1
 
+                db_session.query(ScanSession).filter_by(usps_number=usps_number).delete()
                 db_session.commit()
-                db_session.close()
-
-                session.pop('active_usps', None)
-                session.pop('usps_timestamp', None)
-                flash(f"✅ Saved {saved_count} item(s) to USPS: {data}")
-
+                flash(f"✅ Saved {saved_count} item(s) to USPS: {usps_number}")
             else:
-                # Start new session or resume existing one
-                if data in scan_sessions:
-                    flash(f"📥 Continuing existing USPS session: {data}")
-                else:
-                    scan_sessions[data] = []
-                    flash(f"📥 New USPS package started: {data}")
-
-                session['active_usps'] = data
-                session['usps_timestamp'] = now
+                # Start new session
+                flash(f"📬 Started new USPS session: {usps_number}")
 
         else:
+            # Handle item scan
+            active_usps = db_session.query(ScanSession.usps_number)\
+                                    .order_by(ScanSession.timestamp.desc())\
+                                    .first()
             if not active_usps:
                 flash("❗ Please scan a USPS label first.")
                 return redirect(url_for('scan_pair'))
 
-            if data in scan_sessions.get(active_usps, []):
-                flash(f"⚠️ Duplicate item scan: {data}")
-                return redirect(url_for('scan_pair'))
+            active_usps = active_usps[0]
 
             if data.count('|') != 2:
                 flash("❗ Invalid item format. Use: product | ID# | username")
                 return redirect(url_for('scan_pair'))
 
-            scan_sessions[active_usps].append(data)
+            # Prevent duplicate within this session
+            if db_session.query(ScanSession).filter(and_(
+                ScanSession.usps_number == active_usps,
+                ScanSession.item_raw == data
+            )).first():
+                flash(f"⚠️ Duplicate item: {data}")
+                return redirect(url_for('scan_pair'))
+
+            # Save to ScanSession table
+            new_scan = ScanSession(usps_number=active_usps, item_raw=data, timestamp=now)
+            db_session.add(new_scan)
+            db_session.commit()
             flash(f"✅ Added item: {data}")
 
         return redirect(url_for('scan_pair'))
 
     # GET view
+    recent_usps = db_session.query(ScanSession.usps_number)\
+                            .order_by(ScanSession.timestamp.desc())\
+                            .first()
+    active_usps = recent_usps[0] if recent_usps else None
+
+    existing_items = []
+    scanned_items = []
+
     if active_usps:
-        db_session = Session()
+        scanned_items = [s.item_raw for s in db_session.query(ScanSession).filter_by(usps_number=active_usps).all()]
         existing_items = db_session.query(Package).filter_by(tracking_number=active_usps).all()
-        db_session.close()
+
+    db_session.close()
 
     return render_template(
         'scan_pair.html',
         active_usps=active_usps,
-        scanned_items=scan_sessions.get(active_usps, []),
+        scanned_items=scanned_items,
         existing_items=existing_items,
         packer_names=PACKER_NAMES,
-        active_packers=session.get('active_packers', []),
+        active_packers=request.cookies.get('active_packers', '')
     )
 
 
