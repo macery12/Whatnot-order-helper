@@ -26,6 +26,7 @@ class ScanSession(Base):
     scanned_items = Column(Text)
     finalized = Column(Boolean, default=False)
     timestamp = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 class Package(Base):
     __tablename__ = 'packages'
