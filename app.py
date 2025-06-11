@@ -536,7 +536,7 @@ def scan_pair():
                 flash(f"✅ Saved {saved_count} item(s) to USPS: {data}")
             else:
                 # Start new USPS session (reuse open if same exists)
-                existing = db_session.query(ScanSession).filter_by(usps_number=data, finalized=False).first()
+                existing = db_session.query(ScanSession).filter_by(tracking_number=data, finalized=False).first()
                 if existing:
                     flash(f"📦 Resuming existing USPS session: {data}")
                 else:
