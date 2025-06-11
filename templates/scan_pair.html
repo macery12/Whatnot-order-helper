@@ -47,31 +47,32 @@
       text-align: left;
     }
     select {
-  background-color: #222;
-  color: #eee;
-  padding: 10px;
-  font-size: 1.1rem;
-  border-radius: 6px;
-  border: 1px solid #444;
-  width: 60%;
-  max-width: 300px;
-  margin-top: 10px;
-}
+      background-color: #222;
+      color: #eee;
+      padding: 10px;
+      font-size: 1.1rem;
+      border-radius: 6px;
+      border: 1px solid #444;
+      width: 60%;
+      max-width: 300px;
+      margin-top: 10px;
+    }
 
-select option {
-  background-color: #111;
-  color: #eee;
-}
+    select option {
+      background-color: #111;
+      color: #eee;
+    }
 
-select:focus {
-  outline: none;
-  border-color: #ff3c3c;
-  box-shadow: 0 0 4px #ff3c3c55;
-}
+    select:focus {
+      outline: none;
+      border-color: #ff3c3c;
+      box-shadow: 0 0 4px #ff3c3c55;
+    }
   </style>
 </head>
 <body>
   <h1>📦 Scan Pairing Station</h1>
+
   {% if packer_names %}
   <div class="section">
     <form method="POST" action="{{ url_for('set_active_packers') }}">
@@ -84,19 +85,20 @@ select:focus {
       </select>
     </form>
   </div>
-{% endif %}
+  {% endif %}
 
   <!-- Flash Messages -->
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       <div class="section">
         {% for category, message in messages %}
-        <div class="flash">{{ message }}</div>
+          <div class="flash">{{ message }}</div>
         {% endfor %}
       </div>
     {% endif %}
   {% endwith %}
 
+  <!-- Scan Input -->
   <form action="{{ url_for('scan_pair') }}" method="POST">
     <input type="text" name="scan_input" placeholder="Scan USPS or Item..." autofocus autocomplete="off">
   </form>
@@ -130,6 +132,5 @@ select:focus {
       {% endif %}
     </div>
   {% endif %}
-
 </body>
 </html>
