@@ -498,6 +498,9 @@ def scan_pair():
                         flash(f"⚠️ Skipped duplicate: {item}")
                         continue
 
+                    initials = [''.join(part[0] for part in name.strip().split()) for name in
+                                session.get('active_packers', [])]
+
                     pkg = Package(
                         username=username,
                         product_name=product_name,
@@ -509,7 +512,8 @@ def scan_pair():
                         packed=True,
                         show_date='',
                         show_label='',
-                        image_ids=''
+                        image_ids='',
+                        packers=' + '.join(initials)
                     )
                     db_session.add(pkg)
                     saved_count += 1
@@ -556,7 +560,9 @@ def scan_pair():
         'scan_pair.html',
         active_usps=active_usps,
         scanned_items=scan_sessions.get(active_usps, []),
-        existing_items=existing_items
+        existing_items=existing_items,
+        packer_names=PACKER_NAMES,  # ← from names.py
+        active_packers=session.get('active_packers', [])
     )
 
 

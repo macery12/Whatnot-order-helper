@@ -46,10 +46,45 @@
       max-width: 700px;
       text-align: left;
     }
+    select {
+  background-color: #222;
+  color: #eee;
+  padding: 10px;
+  font-size: 1.1rem;
+  border-radius: 6px;
+  border: 1px solid #444;
+  width: 60%;
+  max-width: 300px;
+  margin-top: 10px;
+}
+
+select option {
+  background-color: #111;
+  color: #eee;
+}
+
+select:focus {
+  outline: none;
+  border-color: #ff3c3c;
+  box-shadow: 0 0 4px #ff3c3c55;
+}
   </style>
 </head>
 <body>
   <h1>📦 Scan Pairing Station</h1>
+  {% if packer_names %}
+  <div class="section">
+    <form method="POST" action="{{ url_for('set_active_packers') }}">
+      <h3>👤 Select Active Packer:</h3>
+      <select name="active_packers" onchange="this.form.submit()" required>
+        <option value="">-- Select --</option>
+        {% for person in packer_names %}
+          <option value="{{ person }}" {% if person in active_packers %}selected{% endif %}>{{ person }}</option>
+        {% endfor %}
+      </select>
+    </form>
+  </div>
+{% endif %}
 
   <!-- Flash Messages -->
   {% with messages = get_flashed_messages(with_categories=true) %}
