@@ -1,13 +1,12 @@
-Here’s an updated version of your `README.md` that reflects the full scope of your Whatnot project and clearly labels it as a work in progress (WIP):
 
----
 
-```markdown
+```
 # Whatnot Order Helper 📦 *(Work In Progress)*
 
 **A powerful local tool for Whatnot sellers to manage, track, and document order packing — with advanced scanning, labeling, photo uploads, and user tracking.**
 
-This WIP Flask-based web application is designed to simplify the packaging workflow during live sales by connecting scanned USPS tracking numbers to Whatnot CSV-exported orders. It also supports photo documentation, user tracking, and streamlined label printing — all aimed at reducing packing errors and disputes.
+This WIP Flask-based web application is designed to simplify the packaging workflow during live sales by connecting scanned USPS tracking numbers to Whatnot CSV-exported orders.
+It also supports photo documentation, user tracking, and streamlined label printing — all aimed at reducing packing errors and disputes.
 
 ---
 
