@@ -1,36 +1,57 @@
-# Whatnot Order Helper 📦
-
-**A streamlined local tool for Whatnot sellers to manage, track, and document packaging of live-sale orders.**
-
-This Flask-based web app helps packaging teams match Whatnot orders to physical boxes, track packing progress, and optionally upload photos of each packed order for recordkeeping — a lifesaver in case of missing items or packing disputes.
+Here’s an updated version of your `README.md` that reflects the full scope of your Whatnot project and clearly labels it as a work in progress (WIP):
 
 ---
 
-## 🔧 Features
+```markdown
+# Whatnot Order Helper 📦 *(Work In Progress)*
 
-- **CSV Import Tool**: Parse and process Whatnot-exported CSVs to load show orders.
-- **Packing Tracker**: Toggle order status as "Packed" or "Unpacked" to stay organized.
-- **Image Uploads**: Attach photo records to each order to prove what was packed.
-- **Dashboard View**: Clean, color-coded interface for quickly identifying packing progress.
-- **Scan Mode**: Supports barcode scanning to quickly pull up and update order status.
-- **User Tracking (WIP)**: Planned user system to log who packed what order.
+**A powerful local tool for Whatnot sellers to manage, track, and document order packing — with advanced scanning, labeling, photo uploads, and user tracking.**
+
+This WIP Flask-based web application is designed to simplify the packaging workflow during live sales by connecting scanned USPS tracking numbers to Whatnot CSV-exported orders. It also supports photo documentation, user tracking, and streamlined label printing — all aimed at reducing packing errors and disputes.
+
+---
+
+## 🔧 Core Features (Stable)
+
+- **📥 CSV Import Tool**: Processes Whatnot-exported CSVs to load and organize live sale orders.
+- **✅ Packing Tracker**: Toggle "Packed" status per order with real-time visual updates.
+- **📸 Image Uploads**: Upload multiple photo proofs for each order — stored and linked to item records.
+- **📊 Dashboard View**: Color-coded interface to highlight missing tracking, packing status, and per-user counts.
+- **📦 Scan Mode**: Use a barcode scanner to instantly pull up, update, and document orders using USPS tracking numbers.
+- **📋 Admin Page**: Manually add or edit orders by tracking number or order number for debugging or adjustments.
+
+---
+
+## 🧪 Experimental & WIP Features
+
+- **👤 User Tracking System**: Set and persist active packers; auto-log who packed each order.
+- **📷 Scan Camera Integration**: Trigger camera preview/recording on barcode scan to document packing live.
+- **🖨️ Label Maker**: Generate 2x1" labels using scanned item name + ID + username and print via browser.
+- **📦 Live Scan Flow**: Smart workflow for scanning USPS labels:
+  - First scan = fetch and display package
+  - Second scan = mark as packed + associate images + set packer
+- **🍪 Persistent UI Cookies**: Store label size, packer, and layout preferences in cookies for session continuity.
+- **📦 Support for Multiple Orders per Tracking #**: Detect and display grouped packages per scanned label.
 
 ---
 
 ## 📂 Project Structure
 
 ```
+
 ├── app.py                   # Main Flask app
-├── csv_decoder.py           # Handles parsing of Whatnot CSV files
-├── database.py              # SQLAlchemy models and DB setup
-├── static/                  # CSS, images, and JavaScript files
+├── csv_decoder.py           # Parses Whatnot CSVs and integrates with DB
+├── database.py              # SQLAlchemy models + DB session setup
+├── static/
+│   └── images/              # Order photo uploads
+│   └── css/                 # Styles (dashboard, scan, labelmaker, etc.)
 ├── templates/               # Jinja2 HTML templates
-├── instance/                # Contains the SQLite database (volume-mounted)
+├── instance/                # Volume-mounted SQLite/Postgres data folder
 ├── requirements.txt         # Python dependencies
 ├── Dockerfile               # Docker build config
-├── docker-compose.yml       # Easy deployment setup
-└── whatnot_app_roadmap.txt  # Planned features and notes
-```
+├── docker-compose.yml       # Compose setup for Flask + Postgres
+
+````
 
 ---
 
@@ -38,71 +59,14 @@ This Flask-based web app helps packaging teams match Whatnot orders to physical 
 
 ### Manual Setup (Local Python)
 
-1. Clone the repo:
-   ```bash
-   git clone https://github.com/macery12/Whatnot-order-helper.git
-   cd Whatnot-order-helper
-   ```
-
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. Run the app:
-   ```bash
-   python app.py
-   ```
-
-4. Open your browser at:
-   ```
-   http://localhost:5000
-   ```
-
----
-
-### Docker Deployment
-
-If you'd rather run it in a containerized environment:
-
-```yaml
-services:
-  web:
-    image: ghcr.io/macery12/whatnot-order-helper:latest
-    container_name: whatnot-flask-app
-    ports:
-      - 5000:5000
-    volumes:
-      - /{FOLDER-NAME-HERE)/names.py:/app/names.py #employee names listing
-    restart: always
-    depends_on: []
-    environment:
-      - DATABASE_URL=
-  postgress:
-    image: postgres:15
-    container_name: whatnot-postgres
-    restart: always
-    environment:
-      POSTGRES_USER: 
-      POSTGRES_PASSWORD: 
-      POSTGRES_DB: 
-    volumes:
-      - whatnot_pgdata:/var/lib/postgresql/data
-    ports:
-      - 5432:5432
-volumes:
-  whatnot_pgdata: null
-networks: {}
-
-```
-
-Then run:
-
 ```bash
-docker-compose up -d
-```
+git clone https://github.com/macery12/Whatnot-order-helper.git
+cd Whatnot-order-helper
+pip install -r requirements.txt
+python app.py
+````
 
-And access via:
+Then open your browser at:
 
 ```
 http://localhost:5000
@@ -110,37 +74,59 @@ http://localhost:5000
 
 ---
 
-## 🧠 How It Works
+### Docker Deployment
 
-- Upload a CSV export from Whatnot
-- The app reads:
-  - Username
-  - Order Number
-  - Product Name
-  - Timestamp
-  - Cancelled/Bundled status
-- You can toggle "Packed" status per order and upload image proof
-- Future updates will add per-user packing records and login support
+```bash
+docker-compose up -d
+```
+
+Make sure to configure `names.py` and environment vars in `docker-compose.yml` for database URL and options.
 
 ---
 
-## 📌 Roadmap
+## 🧠 App Usage Flow
 
-Check `whatnot_app_roadmap.txt` for planned features including:
+1. Upload a Whatnot CSV to load orders.
+2. (Optional) Add tracking numbers manually or auto-fill from scan.
+3. Click a username section to view their orders.
+4. Use scan page to:
 
-- User login system
-- Bulk photo uploads
-- Scan-to-pack flow improvements
-- Admin override tools
+   * Scan USPS label → pull up item
+   * Second scan → mark as packed, save images, log packer
+5. Use label maker to generate 2x1" stickers for each item.
+
+---
+
+## 📌 Roadmap Highlights
+
+Planned and actively developed features:
+
+* 🔐 Login support
+* 📦 Scan-then-pack session tracking
+* 🧾 Label format editor
+* 📂 Multi-photo batch upload
+* 🧮 Stats/analytics per packer
+* 🧹 Database reset/test utilities
+
+See `whatnot_app_roadmap.txt` for full details.
+
+---
+
+## ⚠️ Disclaimer
+
+This is a **Work In Progress** and may not function reliably in production environments yet. Expect breaking changes and bugs until version 1.0.
 
 ---
 
 ## 📝 License
 
-MIT License – free to use and modify. See `LICENSE`.
+MIT License — free for personal or commercial use. See `LICENSE`.
 
 ---
 
 ## 🙋 Support & Contributions
 
-Bug reports, feature requests, and pull requests are welcome! Start by creating an issue or fork and submit a PR.
+Suggestions, bug reports, and pull requests are encouraged! Start a discussion or fork and contribute on GitHub.
+
+```
+
