@@ -381,14 +381,19 @@ def label():
 
         today_str = datetime.now().strftime('%Y-%m-%d')
         width_in, height_in = map(float, label_sizes[label_size])
-        pdf_filename = f"{id_number}_{uuid4().hex}.pdf"
-        pdf_path = os.path.join('static', 'labels', pdf_filename)
-        os.makedirs('static/labels', exist_ok=True)
 
+        # Ensure label output directory exists
+        pdf_folder = os.path.join('static', 'labels')
+        os.makedirs(pdf_folder, exist_ok=True)
+
+        pdf_filename = f"{id_number}_{uuid4().hex}.pdf"
+        pdf_path = os.path.join(pdf_folder, pdf_filename)
+        pdf_url = f"/static/labels/{pdf_filename}"
+
+        # Start PDF generation
         c = canvas.Canvas(pdf_path, pagesize=(width_in * inch, height_in * inch))
         label_width = width_in * inch
         label_height = height_in * inch
-
         y_cursor = label_height - 8
 
         # Company Name
@@ -413,27 +418,34 @@ def label():
             c.drawString(4, y_cursor, today_str)
         c.drawCentredString(label_width / 2, y_cursor, item_name[:20])
         c.drawRightString(label_width - 4, y_cursor, f"#{id_number}")
-        y_cursor -= 32  # Slightly increased space before barcode
+        y_cursor -= 32
 
         # Barcode
         barcode_string = f"{item_name} | {id_number} | {name}"
         barcode_obj = code128.Code128(barcode_string, barHeight=10 * mm, barWidth=0.28)
         barcode_width = barcode_obj.width
         barcode_x = (label_width - barcode_width) / 2
-        barcode_y = max(y_cursor - 10, 4)  # Shifted down more
+        barcode_y = max(y_cursor - 10, 4)
         barcode_obj.drawOn(c, barcode_x, barcode_y)
 
         c.showPage()
         c.save()
 
-        return render_template('label.html',
-                               pdf_url=pdf_path,
-                               label_sizes=label_sizes,
-                               selected_label=label_size,
-                               hide_company=hide_company,
-                               hide_date=hide_date)
+        return render_template(
+            'label.html',
+            pdf_url=pdf_url,
+            label_sizes=label_sizes,
+            selected_label=label_size,
+            hide_company=hide_company,
+            hide_date=hide_date
+        )
 
-    return render_template('label.html', label_sizes=label_sizes, selected_label='Standard (2 x 1)')
+    return render_template(
+        'label.html',
+        label_sizes=label_sizes,
+        selected_label='Standard (2 x 1)'
+    )
+
 
 @app.route('/confirm_pack', methods=['POST'])
 def confirm_pack():
@@ -470,46 +482,44 @@ def update_tracking():
 @app.route('/scan-pair', methods=['GET', 'POST'])
 def scan_pair():
     db_session = Session()
-    active_session = db_session.query(ScanSession).filter_by(finalized=False).order_by(ScanSession.created_at.desc()).first()
-    active_usps = active_session.tracking_number if active_session else None
-    scanned_items = active_session.scanned_items.split(',') if active_session and active_session.scanned_items else []
-    existing_items = []
 
+    # POST first to safely capture input
     if request.method == 'POST':
         data = request.form.get('scan_input', '').strip()
-
         if not data:
             flash("⚠️ Empty scan input")
             return redirect(url_for('scan_pair'))
 
         now = time.time()
+        date = datetime.now()
+        current_date = f"{date.month}/{date.day}/{date.year}"
 
-        # Handle USPS scan
+        # USPS scan logic
         if data.isdigit() and len(data) > 20:
-            current_date = datetime.now().strftime('%-m/%-d/%Y')
+            # Check for existing open session with this label
+            active_session = db_session.query(ScanSession).filter_by(finalized=False).order_by(ScanSession.created_at.desc()).first()
+            active_usps = active_session.tracking_number if active_session else None
+            scanned_items = active_session.scanned_items.split(',') if active_session and active_session.scanned_items else []
 
-            # Finalize active session
             if active_session and active_session.tracking_number == data:
                 if active_session.timestamp and (datetime.now() - active_session.timestamp).total_seconds() > 180:
-                    # Session expired
                     active_session.finalized = True
                     db_session.commit()
                     flash("⏱️ USPS session expired after 3 minutes of inactivity.")
                     return redirect(url_for('scan_pair'))
 
-                # Commit scanned items to packages
+                # Save items to DB
                 saved_count = 0
                 initials = session.get('active_packers', [])
-                item_list = scanned_items
-
-                for item in item_list:
+                for item in scanned_items:
                     try:
-                        product_name, item_id, username = [x.strip() for x in item.split('|')]
+                        parts = item.split('|')
+                        product_name, item_id = parts[0].strip(), parts[1].strip()
+                        username = parts[-1].strip()  # Last part is username
                     except ValueError:
                         flash(f"⚠️ Skipped malformed item: {item}")
                         continue
 
-                    # Skip duplicates
                     if db_session.query(Package).filter_by(order_number=item_id, tracking_number=data).first():
                         flash(f"⚠️ Skipped duplicate: {item}")
                         continue
@@ -535,30 +545,35 @@ def scan_pair():
                 db_session.commit()
                 flash(f"✅ Saved {saved_count} item(s) to USPS: {data}")
             else:
-                # Start new USPS session (reuse open if same exists)
-                existing = db_session.query(ScanSession).filter_by(tracking_number=data, finalized=False).first()
-                if existing:
+                # Finalize all lingering open sessions
+                for s in db_session.query(ScanSession).filter_by(finalized=False).all():
+                    s.finalized = True
+                db_session.commit()
+
+                # Check again to avoid inserting duplicate tracking
+                reuse = db_session.query(ScanSession).filter_by(tracking_number=data, finalized=False).first()
+                if reuse:
                     flash(f"📦 Resuming existing USPS session: {data}")
                 else:
-                    # Finalize any lingering open sessions
-                    open_sessions = db_session.query(ScanSession).filter_by(finalized=False).all()
-                    for s in open_sessions:
-                        s.finalized = True
-
                     new_session = ScanSession(
                         tracking_number=data,
                         scanned_items="",
-                        finalized=False
+                        finalized=False,
+                        timestamp=datetime.now(),
+                        created_at=datetime.now()
                     )
                     db_session.add(new_session)
                     db_session.commit()
                     flash(f"📬 New USPS package started: {data}")
 
-        # Handle item scan
         else:
+            # Item scan
+            active_session = db_session.query(ScanSession).filter_by(finalized=False).order_by(ScanSession.created_at.desc()).first()
             if not active_session:
                 flash("❗ Please scan a USPS label first.")
                 return redirect(url_for('scan_pair'))
+
+            scanned_items = active_session.scanned_items.split(',') if active_session.scanned_items else []
 
             if data.count('|') != 2:
                 flash("❗ Invalid item format. Use: product | ID# | username")
@@ -568,16 +583,41 @@ def scan_pair():
                 flash(f"⚠️ Duplicate item scan: {data}")
                 return redirect(url_for('scan_pair'))
 
+            # Extract and normalize new username
+            try:
+                parts = data.split('|')
+                new_username = parts[-1].strip().lower().replace(' ', '')
+
+                if scanned_items:
+                    try:
+                        base_parts = scanned_items[0].split('|')
+                        base_username = base_parts[-1].strip().lower().replace(' ', '')
+                    except ValueError:
+                        flash("❗ Username check failed: first scanned item is malformed.")
+                        return redirect(url_for('scan_pair'))
+
+                    if new_username != base_username:
+                        flash(f"❌ Username mismatch: '{parts[-1].strip()}' does not match base '{base_parts[-1].strip()}'")
+                        return redirect(url_for('scan_pair'))
+            except Exception:
+                flash("❗ Could not parse item username.")
+                return redirect(url_for('scan_pair'))
+
             # Save scan
             scanned_items.append(data)
             active_session.scanned_items = ','.join(scanned_items)
-            active_session.timestamp = datetime.now()  # Update timestamp for timeout tracking
+            active_session.timestamp = datetime.now()
             db_session.commit()
             flash(f"✅ Added item: {data}")
 
         return redirect(url_for('scan_pair'))
 
-    # GET
+    # GET request
+    active_session = db_session.query(ScanSession).filter_by(finalized=False).order_by(ScanSession.created_at.desc()).first()
+    active_usps = active_session.tracking_number if active_session else None
+    scanned_items = active_session.scanned_items.split(',') if active_session and active_session.scanned_items else []
+    existing_items = []
+
     if active_usps:
         existing_items = db_session.query(Package).filter_by(tracking_number=active_usps).all()
 
@@ -589,6 +629,7 @@ def scan_pair():
         packer_names=PACKER_NAMES,
         active_packers=session.get('active_packers', [])
     )
+
 
 
 

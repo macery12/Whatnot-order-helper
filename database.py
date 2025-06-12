@@ -33,7 +33,7 @@ class Package(Base):
 
     id = Column(Integer, primary_key=True)
     username = Column(String(100))
-    order_number = Column(String(100), unique=True)
+    order_number = Column(String(100))
     product_name = Column(String(200))
     timestamp = Column(String(100))
     bundled = Column(Boolean)
