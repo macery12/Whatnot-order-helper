@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Boolean, Text, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, Text, DateTime, inspect
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
@@ -17,6 +17,7 @@ if not db_url:
 engine = create_engine(db_url, echo=False)
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
+
 
 class ScanSession(Base):
     __tablename__ = 'scan_sessions'
@@ -50,6 +51,7 @@ class Package(Base):
 
 def init_db():
     Base.metadata.create_all(engine)
+    apply_manual_migrations()
 
 def insert_package(data):
     order_number = data.get('order_number', '').strip()
@@ -131,3 +133,24 @@ def update_tracking_number(order_number, tracking_number):
         pkg.tracking_number = tracking_number
         session.commit()
     session.close()
+
+def apply_manual_migrations():
+    with engine.connect() as conn:
+        inspector = inspect(engine)
+
+        def sync_columns(table_cls):
+            table_name = table_cls.__tablename__
+            existing_columns = [col['name'] for col in inspector.get_columns(table_name)]
+            model_columns = table_cls.__table__.columns.keys()
+
+            for column_name in model_columns:
+                if column_name not in existing_columns:
+                    col_type = str(table_cls.__table__.columns[column_name].type)
+                    print(f"⏫ Adding missing column: {column_name} ({col_type}) to {table_name}")
+                    try:
+                        conn.execute(f'ALTER TABLE {table_name} ADD COLUMN {column_name} {col_type}')
+                    except Exception as e:
+                        print(f"⚠️ Failed to add column '{column_name}' to '{table_name}': {e}")
+
+        sync_columns(Package)
+        sync_columns(ScanSession)

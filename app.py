@@ -43,7 +43,6 @@ from collections import defaultdict
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    init_db()
     if request.method == 'POST' and 'csv_file' in request.files:
         file = request.files['csv_file']
         show_date = request.form.get('show_date', '')
@@ -177,7 +176,7 @@ def scan():
     all_packages = get_all_packages()
     selected_orders = []
     matched_order_numbers = []
-    show_modal = False  
+    show_modal = False
 
     # Track recent orders
     recent_ids = session.get('recent_orders', [])
@@ -627,11 +626,12 @@ def scan_pair():
         scanned_items=scanned_items,
         existing_items=existing_items,
         packer_names=PACKER_NAMES,
-        active_packers=session.get('active_packers', [])
+        active_packers=session.get('active_packers', [])  
     )
 
 
 
-
+init_db()
 if __name__ == '__main__':
-    app.run(debug=True, port=1689, host="0.0.0.0")
+
+    app.run(debug=True, port=5000, host="0.0.0.0")
